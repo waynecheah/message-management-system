@@ -113,12 +113,99 @@ Content rules inside sections:
 - `table`: full-width, bordered rows, muted header row, comfortable cell padding
 - `code`: monospace, subtle background pill
 
-### Step 6 — Confirm
+### Step 6 — Check the writing style
+
+Before you report, read back the prose you wrote and correct any breach of the
+writing style section:
+
+- Any sentence longer than 25 words (20 for an instruction)
+- Any paragraph longer than six sentences
+- Any passive voice with a known actor
+- Any perfect tense, or any `-ing` form used as a noun or clause opener
+- Any concept named by two different words
+- Any noun cluster longer than three words
+
+### Step 7 — Confirm
 
 Report:
 - File written (path)
 - Slug, title, status, date
 - Which of the 9 sections were included vs omitted (and why, briefly, if a source section didn't fit any bucket)
+
+---
+
+## Writing style — ASD-STE100 Simplified Technical English
+
+Write all prose in the generated HTML in Simplified Technical English (ASD-STE100).
+The goal is a page that one reader understands one way only — no second reading,
+no ambiguity, no decoding.
+
+### Sentences
+
+- **Descriptive sentences: 25 words maximum.**
+- **Instruction sentences: 20 words maximum.**
+- One idea per sentence. Split a long sentence; do not add a comma.
+- Put the main topic first. Do not open with a subordinate clause.
+
+### Paragraphs
+
+- Six sentences maximum.
+- One topic per paragraph.
+- State the point in the first sentence.
+
+### Verbs
+
+- Use the active voice. Use the passive only when the actor is unknown or does not matter.
+- Use simple tenses only: present, past, future.
+  Do not use perfect tenses — write "we chose X", not "X has been chosen".
+- Do not use `-ing` forms as nouns or to open a clause.
+  Write "We use X to reduce cost", not "Using X reduces cost".
+- Use the imperative for instructions: "Run the tests."
+
+### Words
+
+- **One word, one meaning.** Choose one term for each concept and repeat it
+  everywhere. Never vary a term for style — a synonym reads as a new concept.
+  Where the repo defines a term (`CONTEXT.md`), that term wins.
+- Prefer short, common words. Write "use", not "utilise"; "start", not "initiate".
+- No idioms, metaphors, slang, or humour.
+- Keep the articles: "the", "a", "an". Do not write in telegraphic style.
+- Keep "that" when it helps the reader parse the sentence.
+- Noun clusters: three words maximum. Break a longer cluster with a preposition —
+  write "the index for the search backend", not "the search backend index config".
+
+### Structure
+
+- Write sequential steps as a numbered list.
+- Put a warning before the action it applies to, never after.
+- Write positively. Avoid double negatives.
+
+### Exempt from these rules — keep verbatim
+
+- Identifiers, code, endpoints, schemas, field names, file paths, and values
+- Table cells that hold data
+- Direct quotations from the source markdown
+
+### Example
+
+Before:
+
+> Having weighed the trade-offs involved, it was ultimately decided that keyset
+> pagination would be adopted, given that the performance of skip-based
+> pagination tends to degrade as the offset grows larger.
+
+After:
+
+> We use keyset pagination. Skip-based pagination becomes slower as the offset increases.
+
+The rewrite removes the `-ing` opener, the passive voice, the perfect tense, and
+the hedging. Two short sentences replace one long sentence.
+
+### Known limitation
+
+Full ASD-STE100 compliance requires the approved dictionary of about 900 words,
+which is not bundled here. Apply the writing rules above exactly. Approximate the
+dictionary by choosing the most common, most concrete word available.
 
 ---
 
@@ -128,5 +215,5 @@ Report:
 2. No Astro, no component catalog, no build step — write plain HTML/CSS by hand.
 3. Only emit a section from the fixed list in Step 4 if the source markdown has matching content — never pad with empty sections.
 4. Do not invent content not present in the source markdown. Preserve identifiers, code, table data, and technical details verbatim (exact names, values, endpoints, schemas, numbers stay exact).
-5. **Write for a human reader, not a markdown-to-HTML converter.** The whole point of this page is that someone can understand the spec *without* reading the source markdown. So don't just copy-paste or lightly reformat the source prose — rewrite each section in your own simple, plain words: shorter sentences, plain vocabulary, the point stated up front. Cut hedging, repetition, and meta-commentary from the original doc. Only technical facts (identifiers, values, schemas, code) must stay verbatim — everything else should read like a clear explanation of the spec, not a translation of it.
+5. **Write for a human reader, not a markdown-to-HTML converter.** The whole point of this page is that someone can understand the spec *without* reading the source markdown. Do not copy or lightly reformat the source prose. Rewrite every section in Simplified Technical English — see the writing style section above, and apply it in full. Cut hedging, repetition, and meta-commentary from the original document. Only technical facts (identifiers, values, schemas, code) stay verbatim. Everything else reads as a clear explanation of the spec, not a translation of it.
 6. If the source markdown is unreadable or has no discernible title/content, write nothing and explain why.
