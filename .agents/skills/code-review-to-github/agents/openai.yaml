@@ -1,0 +1,4 @@
+interface:
+  display_name: "Code Review To GitHub"
+  short_description: "Review commits and publish PR findings"
+  default_prompt: "Use $code-review-to-github to review PR #25 for waynecheah/message-management-system at commit d1e77b5 and publish findings."
