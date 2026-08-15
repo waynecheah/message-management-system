@@ -22,6 +22,10 @@ Use these terms with these exact meanings in code, tests, and docs.
 - **Conversation** — the ordered stream of messages sharing a
   `conversationId`. Not a separate stored aggregate; it is identified, not
   created.
+- **Sender** — the authenticated principal that created a message, taken from
+  the token's `sub` claim. A message can only ever be attributed to its caller:
+  there is no way to record a message on behalf of someone else, and no concept
+  of a system or bot sender. _Avoid_: author, user, participant.
 - **Tenant** — the isolation boundary. Every message belongs to exactly one
   tenant, and no read or write may cross tenants.
 - **Message-created event** — the Kafka event published after a message is
@@ -29,6 +33,15 @@ Use these terms with these exact meanings in code, tests, and docs.
 - **Search index** — the Elasticsearch representation of messages. A derived
   read model, rebuildable from MongoDB, never the system of record.
 - **Primary store** — MongoDB. The single system of record.
+
+### Flagged ambiguities
+
+- "Sender" and "user" were used interchangeably — resolved 2026-08-14: there is
+  no **User** in this context. The system owns messages, not identities
+  (ADR-0018), so **Sender** is the only term, and it means the authenticated
+  caller. A consequence worth stating plainly: **transcript import, system
+  messages, and bot-relayed messages are all impossible** by construction, not
+  merely unbuilt.
 
 ## Tech stack (mandated)
 

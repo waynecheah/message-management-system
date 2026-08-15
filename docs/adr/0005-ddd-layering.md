@@ -70,8 +70,15 @@ ourselves, and the lint zones below enforce a convention we invented.
 **Therefore: do not use `nest g resource` or `nest g service`.** They are a trap
 rather than a shortcut here — they generate code that violates this layering,
 and because the output lands outside the configured zones the boundary rule may
-not even complain. Create files by hand in the correct layer. `nest new` is fine
-for the initial skeleton, which is then restructured.
+not even complain. Create files by hand in the correct layer.
+
+**Amended 2026-08-14.** This ADR originally allowed `nest new` for the initial
+skeleton, to be restructured afterwards. It is now excluded too: the scaffolder
+selects its own package manager and emits npm-flavoured scripts, which
+[ADR-0003](0003-nub-toolchain.md) forbids, and everything it generates is either
+discarded or moved. The skeleton is written by hand — `nub add` for the Nest
+packages, then `main.ts` and `app.module.ts` created directly in the layers
+below. **No Nest scaffolder is run at any point.**
 
 ### Layer-first, not feature-first
 

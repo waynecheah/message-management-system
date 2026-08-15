@@ -1,0 +1,1608 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grill Decision Review — Message Management System</title>
+<style>
+  :root {
+    --ink: #15171c;
+    --ink-soft: #474d56;
+    --ink-mute: #737a85;
+    --rule: #e2e5ea;
+    --rule-soft: #eef0f3;
+    --bg: #ffffff;
+    --bg-soft: #f7f8fa;
+    --accent: #2f6fd0;
+    --accent-bg: #eaf1fb;
+    --green: #1c7340;
+    --green-bg: #e7f4ec;
+    --green-rule: #bfdfcc;
+    --amber: #8a5a00;
+    --amber-bg: #fdf3e0;
+    --red: #a02a2a;
+    --red-bg: #fbecea;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    scroll-padding-top: 24px;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.65;
+  }
+
+  .page { max-width: 820px; margin: 0 auto; padding: 72px 28px 128px; }
+
+  /* ---------- section menu ---------- */
+
+  .section-menu {
+    position: fixed;
+    top: 72px;
+    right: max(24px, calc(50vw - 550px));
+    width: 230px;
+    max-height: calc(100vh - 96px);
+    overflow-y: auto;
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--bg) 96%, transparent);
+    padding: 16px;
+    z-index: 10;
+  }
+
+  .section-menu__title {
+    margin: 0 0 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+
+  .section-menu ul { margin: 0; padding: 0; list-style: none; }
+  .section-menu li { margin: 2px 0; }
+
+  .section-menu__sublist {
+    margin: 5px 0 10px 13px;
+    padding: 0 0 0 10px;
+    list-style: none;
+    border-left: 1px solid var(--rule);
+  }
+
+  .section-menu a {
+    display: block;
+    border-left: 3px solid transparent;
+    border-radius: 0 6px 6px 0;
+    padding: 7px 9px;
+    color: var(--ink-soft);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+    text-decoration: none;
+    transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+  }
+
+  .section-menu a:hover,
+  .section-menu a:focus-visible {
+    background: var(--bg-soft);
+    color: var(--accent);
+    outline: none;
+  }
+
+  .section-menu a.is-active {
+    border-left-color: var(--accent);
+    background: var(--accent-bg);
+    color: var(--accent);
+  }
+
+  .section-menu__sublist a {
+    padding: 5px 8px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .section-menu__decisions.has-active-child > a {
+    color: var(--accent);
+  }
+
+  @media (min-width: 1120px) {
+    .page {
+      margin-left: max(24px, calc(50vw - 550px));
+      margin-right: 0;
+    }
+  }
+
+  .meta {
+    font-size: 12px; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--ink-mute); margin-bottom: 14px;
+  }
+
+  h1 {
+    font-size: 37px; line-height: 1.18; font-weight: 700;
+    letter-spacing: -0.02em; margin: 0 0 18px;
+  }
+
+  .lede { font-size: 18px; line-height: 1.7; color: var(--ink-soft); margin: 0 0 26px; }
+
+  .badge {
+    display: inline-block; padding: 4px 12px; border-radius: 999px;
+    font-size: 12.5px; font-weight: 600;
+    background: var(--green-bg); color: var(--green); border: 1px solid var(--green-rule);
+  }
+
+  .paths {
+    margin: 26px 0 0; padding: 0; list-style: none;
+    border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+  }
+  .paths li {
+    display: grid; grid-template-columns: 190px 1fr; gap: 14px;
+    padding: 11px 0; border-bottom: 1px solid var(--rule-soft); margin: 0;
+  }
+  .paths li:last-child { border-bottom: 0; }
+  .paths dt, .paths .k {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--ink-mute); padding-top: 3px;
+  }
+  .paths .v { font-family: var(--mono); font-size: 13px; word-break: break-all; }
+
+  section { margin-top: 58px; }
+
+  section > h2 {
+    font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ink-mute); margin: 0 0 24px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  h3 { font-size: 18px; font-weight: 650; margin: 32px 0 12px; letter-spacing: -0.01em; }
+
+  p { margin: 0 0 15px; }
+  ul, ol { margin: 0 0 18px; padding-left: 22px; }
+  li { margin-bottom: 7px; }
+  strong { font-weight: 650; }
+
+  code {
+    font-family: var(--mono); font-size: 0.875em;
+    background: var(--bg-soft); border: 1px solid var(--rule-soft);
+    border-radius: 4px; padding: 1px 5px;
+  }
+
+  pre {
+    background: var(--bg-soft); border: 1px solid var(--rule); border-radius: 8px;
+    padding: 14px 16px; overflow-x: auto; margin: 0 0 18px; line-height: 1.55;
+  }
+  pre code { background: none; border: 0; padding: 0; font-size: 12.5px; white-space: pre; }
+
+  .note {
+    background: var(--bg-soft); border-left: 4px solid var(--accent);
+    border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 0 0 20px;
+  }
+  .note p:last-child { margin-bottom: 0; }
+  .note--warn { border-left-color: var(--amber); background: var(--amber-bg); }
+
+  /* ---------- decision cards ---------- */
+
+  .card {
+    border: 1px solid var(--rule); border-radius: 10px;
+    padding: 22px 24px; margin: 0 0 18px; background: var(--bg);
+  }
+
+  .card-head {
+    display: flex; align-items: baseline; gap: 12px;
+    margin: 0 0 18px; padding-bottom: 14px; border-bottom: 1px solid var(--rule-soft);
+  }
+
+  .card-num {
+    font-family: var(--mono); font-size: 13px; font-weight: 700;
+    color: var(--accent); background: var(--accent-bg);
+    border-radius: 6px; padding: 3px 9px; flex: none;
+  }
+
+  .card-title { font-size: 18px; font-weight: 650; letter-spacing: -0.01em; margin: 0; }
+
+  .card-phase {
+    display: inline-block; margin-left: auto; flex: none;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--ink-mute); background: var(--bg-soft);
+    border: 1px solid var(--rule-soft); border-radius: 999px; padding: 2px 9px;
+  }
+
+  .field { margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+
+  .field-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-mute); margin-bottom: 5px;
+  }
+
+  .field p { margin: 0 0 10px; }
+  .field p:last-child { margin-bottom: 0; }
+
+  .field--decision {
+    background: var(--green-bg); border: 1px solid var(--green-rule);
+    border-radius: 8px; padding: 13px 16px;
+  }
+  .field--decision .field-label { color: var(--green); }
+
+  .field--rejected .field-label { color: var(--red); }
+  .field--rejected ul { margin-bottom: 0; }
+  .field--rejected li { color: var(--ink-soft); font-size: 15px; }
+
+  .field--evidence {
+    background: var(--bg-soft); border: 1px solid var(--rule-soft);
+    border-radius: 8px; padding: 13px 16px;
+  }
+  .field--evidence pre { margin-bottom: 0; background: var(--bg); }
+
+  /* ---------- tables ---------- */
+
+  .table-wrap { overflow-x: auto; margin: 0 0 22px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+  thead th {
+    background: var(--bg-soft); border-bottom: 1px solid var(--rule);
+    font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--ink-mute); white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+
+  .gloss { margin: 0; }
+  .gloss dt { font-weight: 650; margin-top: 14px; }
+  .gloss dt:first-child { margin-top: 0; }
+  .gloss dd { margin: 3px 0 0; color: var(--ink-soft); }
+
+  @media (max-width: 1119px) {
+    .section-menu {
+      position: static;
+      width: auto;
+      max-height: none;
+      margin: 24px 28px 0;
+    }
+    .section-menu__list { display: flex; flex-wrap: wrap; gap: 4px; }
+    .section-menu li { margin: 0; }
+    .section-menu a { border-left: 0; border-bottom: 3px solid transparent; border-radius: 6px 6px 0 0; }
+    .section-menu a.is-active { border-bottom-color: var(--accent); }
+    .section-menu__decisions { flex: 1 0 100%; }
+    .section-menu__sublist {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 2px 4px;
+      margin: 5px 0 8px;
+      padding: 8px 0 0;
+      border-top: 1px solid var(--rule);
+      border-left: 0;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .section-menu { margin: 20px 20px 0; }
+    .page { padding: 48px 20px 96px; }
+    h1 { font-size: 29px; }
+    .paths li { grid-template-columns: 1fr; gap: 3px; }
+    .card { padding: 18px 18px; }
+    .card-head { flex-wrap: wrap; }
+    .card-phase { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+<nav class="section-menu" aria-label="Review sections">
+  <div class="section-menu__title">On this page</div>
+  <ul class="section-menu__list">
+    <li><a href="#status" class="is-active" aria-current="location">Write-back status</a></li>
+    <li><a href="#assumptions">Assumptions</a></li>
+    <li class="section-menu__decisions">
+      <a href="#decisions">Decisions</a>
+      <ol class="section-menu__sublist" aria-label="Decision cards">
+        <li><a href="#d01">01 · Skeleton and decorators</a></li>
+        <li><a href="#d02">02 · TypeScript version</a></li>
+        <li><a href="#d03">03 · Swagger plugin</a></li>
+        <li><a href="#d04">04 · Identity store</a></li>
+        <li><a href="#d05">05 · Read return type</a></li>
+        <li><a href="#d06">06 · BSON cursor ID</a></li>
+        <li><a href="#d07">07 · Search result ID</a></li>
+        <li><a href="#d08">08 · Sanitization order</a></li>
+        <li><a href="#d09">09 · Indexer health</a></li>
+        <li><a href="#d10">10 · Search envelope</a></li>
+        <li><a href="#d11">11 · Invalid limit</a></li>
+        <li><a href="#d12">12 · Metadata bound</a></li>
+        <li><a href="#d13">13 · Publish budget</a></li>
+        <li><a href="#d14">14 · Sender meaning</a></li>
+        <li><a href="#d15">15 · Error mapping</a></li>
+        <li><a href="#d16">16 · Cross-tenant read</a></li>
+        <li><a href="#d17">17 · Test isolation</a></li>
+        <li><a href="#d18">18 · Clock read</a></li>
+        <li><a href="#d19">19 · Explain plan</a></li>
+      </ol>
+    </li>
+    <li><a href="#doc-updates">Document updates</a></li>
+    <li><a href="#glossary">Glossary</a></li>
+  </ul>
+</nav>
+<main class="page">
+
+  <div class="meta">Grill Decision Review · August 14, 2026</div>
+  <h1>Grill Decision Review — Message Management System</h1>
+  <p class="lede">
+    This document records the grill session on the build design. The session asked nineteen questions.
+    Each question closed one open point in the design. This document holds one card for each decision.
+  </p>
+  <div><span class="badge">All decisions written back to the source</span></div>
+
+  <ul class="paths">
+    <li><span class="k">Draft source</span><span class="v">docs/superpowers/specs/2026-08-14-message-management-design.md</span></li>
+    <li><span class="k">Generated plan HTML</span><span class="v">docs/superpowers/specs/2026-08-14-message-management-design.html</span></li>
+    <li><span class="k">This review</span><span class="v">docs/grill-with-docs/2026-08-14-message-management-design.html</span></li>
+  </ul>
+
+  <!-- ============ STATUS ============ -->
+  <section id="status">
+    <h2>Write-back status</h2>
+
+    <p>
+      The session wrote every decision back to the draft source. The source file above is current. It
+      is the single record of the build design. This review explains why each decision holds. It does
+      not replace the source.
+    </p>
+
+    <p>
+      The session also generated the plan HTML from that source after the write-back. The plan HTML
+      therefore shows the settled design and not the original draft.
+    </p>
+
+    <div class="note">
+      <p>
+        <strong>The session changed documents only.</strong> No implementation code exists yet. The
+        repository holds documents, a <code>package.json</code>, a <code>tsconfig.json</code> and a
+        lockfile. No source file under <code>src/</code> was created or altered.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ ASSUMPTIONS ============ -->
+  <section id="assumptions">
+    <h2>Assumptions</h2>
+
+    <ol>
+      <li>The timebox is four to five hours, as <code>CONTEXT.md</code> states.</li>
+      <li>The target toolchain is <code>nub</code> 0.6.0 on Node 24.12. The probes ran on that pair.</li>
+      <li>MongoDB, Kafka and Elasticsearch run through <code>docker-compose</code> on the reviewer's machine.</li>
+      <li>The README is the graded deliverable. Every trade-off must appear there with its reason.</li>
+      <li>An external identity provider issues the tokens. This service verifies them and never mints one.</li>
+      <li>The reviewer runs one command to start the system and one command to run the tests.</li>
+    </ol>
+
+    <div class="note note--warn">
+      <p>
+        <strong>Execution assumption.</strong> The required local gateway at
+        <code>127.0.0.1:8787</code> was unavailable. The run used the authenticated Claude endpoint
+        instead. This affected the transport of the session only. It changed no design decision, no
+        recommendation and no written file.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ DECISIONS ============ -->
+  <section id="decisions">
+    <h2>Decisions</h2>
+
+    <p>
+      The cards follow the order of the session. Each card holds the same five parts in the same
+      order: the numbered question, the question asked, why it mattered, the decision, and the
+      practical effect. Some cards add the rejected options and the evidence.
+    </p>
+
+    <!-- 01 -->
+    <article class="card" id="d01">
+      <div class="card-head">
+        <span class="card-num">01</span>
+        <h3 class="card-title">How does slice 0 create the skeleton?</h3>
+        <span class="card-phase">Toolchain</span>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Question asked</div>
+        <p>
+          Slice 0 said "restructured <code>nest new</code>". The repository tsconfig cannot run a
+          decorator, and <code>nub</code> cannot drive the Nest scaffolder. How should slice 0 build
+          the skeleton?
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Why it mattered</div>
+        <p>
+          This blocked every later slice. <code>nub</code> rejects Stage 3 decorators, because the oxc
+          transpiler does not support them. The repository tsconfig set neither decorator flag, so
+          NestJS could not start at all. The design document never mentioned tsconfig.
+        </p>
+      </div>
+
+      <div class="field field--decision">
+        <div class="field-label">Decision</div>
+        <p>
+          Write the skeleton by hand. Never run <code>nest new</code>. Slice 0 adds
+          <code>experimentalDecorators</code> and <code>emitDecoratorMetadata</code> to
+          <code>tsconfig.json</code>. It keeps ESM and <code>verbatimModuleSyntax</code>. It installs
+          the Nest packages with <code>nub add</code>, then creates <code>main.ts</code> and
+          <code>app.module.ts</code> directly in the four layers.
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Practical effect</div>
+        <p>
+          The application starts. The layer directories exist from the first commit. No generated file
+          needs a later move. ADR-0005 gained a dated amendment, because its earlier text allowed
+          <code>nest new</code> for the initial skeleton.
+        </p>
+      </div>
+
+      <div class="field field--rejected">
+        <div class="field-label">Rejected</div>
+        <ul>
+          <li><strong>Run <code>nest new</code>, then correct it.</strong> The scaffolder picks its own package manager and writes npm scripts, which ADR-0003 forbids. It also writes the flat feature shape that ADR-0005 calls a trap.</li>
+          <li><strong>Drop ESM for CommonJS.</strong> The probe showed ESM works, so the change bought nothing.</li>
+          <li><strong>Defer the decision.</strong> The blocker stops slice 0 on the first run.</li>
+        </ul>
+      </div>
+
+      <div class="field field--evidence">
+        <div class="field-label">Evidence — probe output</div>
+<pre><code>$ nub probe.ts
+Error: Nub: Stage 3 decorators are not supported by the transpiler yet.
+This is an upstream limitation in oxc (oxc-project/oxc#9170).
+Workarounds:
+  1. Set "experimentalDecorators": true in tsconfig.json ...
+
+$ nub probe.ts        # after both flags set
+decorator ran, class: Svc
+emitted metadata: ["design:paramtypes"]
+
+$ nub probe2.ts       # ESM + verbatimModuleSyntax
+ESM + verbatimModuleSyntax ok, class: Svc
+paramtypes: [ [ 'design:paramtypes', [ 'Dep' ] ] ]</code></pre>
+      </div>
+    </article>
+
+    <!-- 02 -->
+    <article class="card" id="d02">
+      <div class="card-head">
+        <span class="card-num">02</span>
+        <h3 class="card-title">Which TypeScript version does the project use?</h3>
+        <span class="card-phase">Toolchain</span>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Question asked</div>
+        <p>
+          <code>package.json</code> pinned <code>typescript: ^7</code>. Version 7 is the native
+          <code>tsgo</code> compiler, and <code>ts-jest</code> targets the 5.x compiler API. What
+          happens to the test toolchain?
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Why it mattered</div>
+        <p>
+          Three tools read the TypeScript compiler API: <code>ts-jest</code>,
+          <code>typescript-eslint</code> and the type check. All three could break at once. The
+          timebox is four to five hours, so a broken toolchain costs the graded core.
+        </p>
+      </div>
+
+      <div class="field field--decision">
+        <div class="field-label">Decision</div>
+        <p>Pin TypeScript to <code>^5.9</code>.</p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Practical effect</div>
+        <p>
+          <code>nub</code> transpiles at run time, so TypeScript here serves only the type check, the
+          lint and <code>ts-jest</code>. Version 7 adds no value to this project. The whole Nest and
+          Jest stack now runs on the version it was tested against.
+        </p>
+      </div>
+
+      <div class="field field--rejected">
+        <div class="field-label">Rejected</div>
+        <ul>
+          <li><strong>Keep version 7 and use <code>@swc/jest</code>.</strong> It adds one dependency and loses type errors inside tests.</li>
+          <li><strong>Keep version 7 and probe first.</strong> It spends timebox on a risk with no upside.</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 03 -->
+    <article class="card" id="d03">
+      <div class="card-head">
+        <span class="card-num">03</span>
+        <h3 class="card-title">What happens to the Swagger CLI plugin?</h3>
+        <span class="card-phase">Toolchain</span>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Question asked</div>
+        <p>
+          The Swagger CLI plugin cannot run under <code>nub</code>. ADR-0019 accepted
+          <code>@nestjs/swagger</code> because that plugin removed the objection about
+          <code>@ApiProperty</code> on every field. What now?
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Why it mattered</div>
+        <p>
+          The plugin is a TypeScript transformer. The Nest CLI applies it during
+          <code>nest build</code> or <code>nest start</code> through <code>nest-cli.json</code>.
+          Decision 01 removed the Nest CLI from the project. The transform layer of <code>nub</code>
+          uses oxc and exposes no transformer hook. The central justification of ADR-0019 therefore
+          failed.
+        </p>
+      </div>
+
+      <div class="field field--decision">
+        <div class="field-label">Decision</div>
+        <p>
+          Keep <code>@nestjs/swagger</code>. Write <code>@ApiProperty</code> and
+          <code>@ApiPropertyOptional</code> by hand on the four DTOs.
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Practical effect</div>
+        <p>
+          The setup cost moves from near zero to about fifteen minutes. The surface stays small: three
+          endpoints, four DTOs, no nested request model. ADR-0019 already carries a rule for this case.
+          A disabled plugin needs an explanation in the README, so the README must state it. ADR-0019
+          gained a dated amendment.
+        </p>
+      </div>
+
+      <div class="field field--rejected">
+        <div class="field-label">Rejected</div>
+        <ul>
+          <li><strong>Drop Swagger.</strong> ADR-0019 calls it the first item to cut under time pressure, but the reviewer value stays real for one package.</li>
+          <li><strong>Add a build step for the docs.</strong> It restores a build pipeline that ADR-0003 removed on purpose, for an ungraded artefact.</li>
+        </ul>
+      </div>
+
+      <div class="field field--evidence">
+        <div class="field-label">Evidence</div>
+        <p>
+          The <code>nub</code> runtime directory holds <code>transform-core.mjs</code> and no plugin
+          API. The <code>nub</code> command list holds no build or transform subcommand.
+        </p>
+      </div>
+    </article>
+
+    <!-- 04 -->
+    <article class="card" id="d04">
+      <div class="card-head">
+        <span class="card-num">04</span>
+        <h3 class="card-title">Which component enters the AsyncLocalStorage store?</h3>
+        <span class="card-phase">Runtime</span>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Question asked</div>
+        <p>
+          The design drew this order: <code>JwtAuthGuard</code>, then
+          <code>ALS.run({ tenantId, senderId })</code>, then <code>ValidationPipe</code>. Which
+          component performs the <code>run</code> call?
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Why it mattered</div>
+        <p>
+          No component in the design could do it. A guard returns a boolean, so an
+          <code>als.run(cb)</code> inside <code>canActivate</code> closes as soon as the guard returns.
+          ADR-0012 named middleware, but Nest runs middleware before guards, so the token is still
+          unverified there. The order in the diagram was correct and unbuildable.
+        </p>
+      </div>
+
+      <div class="field field--decision">
+        <div class="field-label">Decision</div>
+        <p>
+          Use a global <code>APP_INTERCEPTOR</code>. It reads <code>request.user</code>, which the
+          passport strategy sets, and it wraps <code>next.handle()</code> in <code>als.run()</code>.
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Practical effect</div>
+        <p>
+          Nest runs interceptors after guards and before pipes. The pipes, the handler, the use case
+          and the repository therefore all run inside the store. The <code>@Public()</code> health
+          route carries no user, so the interceptor enters no store, and a later
+          <code>require()</code> throws. That is the intended fail-closed behaviour. ADR-0012 gained a
+          dated amendment for the placement and for the port name <code>IdentityContext</code>.
+        </p>
+      </div>
+
+      <div class="field field--rejected">
+        <div class="field-label">Rejected</div>
+        <ul>
+          <li><strong><code>als.enterWith()</code> in the guard.</strong> One line shorter. It binds the store to the rest of the async resource instead of a bounded callback, so the store can leak across requests.</li>
+          <li><strong>Pass identity explicitly from the controller.</strong> It contradicts ADR-0012 and the good pattern in ADR-0018.</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 05 -->
+    <article class="card" id="d05">
+      <div class="card-head">
+        <span class="card-num">05</span>
+        <h3 class="card-title">What do the read ports return?</h3>
+        <span class="card-phase">Layering</span>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Question asked</div>
+        <p>
+          <code>Message</code> has a private constructor, and <code>Message.create()</code> generates
+          the id and the timestamp. The ports declared <code>Page&lt;Message&gt;</code> and
+          <code>Message[]</code>. How does a read path build those values?
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Why it mattered</div>
+        <p>
+          A stored message already has an id and a timestamp, so <code>create()</code> cannot rebuild
+          it. The design also decided to return the Elasticsearch hit directly. An Elasticsearch hit is
+          a derived value and can be stale. A domain entity built from that hit claims a status the
+          value does not hold.
+        </p>
+      </div>
+
+      <div class="field field--decision">
+        <div class="field-label">Decision</div>
+        <p>
+          Read ports return <code>MessageView</code>. It is a plain immutable type with no behaviour.
+          <code>MessageWriter.save</code> is the only port that takes the entity.
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Practical effect</div>
+        <p>
+          The entity stays on the write path, where its one invariant lives. The Elasticsearch adapter
+          maps a hit straight to a view with no entity construction. Fakes for the read ports become
+          trivial. The session created ADR-0020 for this decision and added it to the ADR index.
+        </p>
+      </div>
+
+      <div class="field field--rejected">
+        <div class="field-label">Rejected</div>
+        <ul>
+          <li><strong>Add <code>Message.restore(props)</code>.</strong> One type instead of two. It adds a public constructor that trusts its input and skips the invariant, and any caller can reach it.</li>
+          <li><strong>Return raw documents.</strong> It leaks <code>_id</code> and the index shape upward.</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 06 -->
+    <article class="card" id="d06">
+      <div class="card-head">
+        <span class="card-num">06</span>
+        <h3 class="card-title">Where does the cursor id become a BSON Binary?</h3>
+        <span class="card-phase">Persistence</span>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Question asked</div>
+        <p>
+          ADR-0008 states that the mapper is the single place for the translation between
+          <code>_id</code> and <code>id</code>. The keyset filter needs a BSON <code>UUID</code> built
+          from the cursor string. Where does that conversion live?
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Why it mattered</div>
+        <p>
+          The repository would become a second translation site. That breaks a rule that a reader can
+          check at a glance. The rule protects one thing: only one file knows how the id is
+          represented.
+        </p>
+      </div>
+
+      <div class="field field--decision">
+        <div class="field-label">Decision</div>
+        <p>
+          The mapper owns both directions. It exports <code>toBinaryId</code> and
+          <code>toStringId</code>. The repository calls them for the keyset bound.
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Practical effect</div>
+        <p>
+          The repository still names <code>_id</code> in the filter and the sort, which is unavoidable.
+          It never knows the representation. The rule in ADR-0008 stays literally true, and no new
+          abstraction appears.
+        </p>
+      </div>
+
+      <div class="field field--rejected">
+        <div class="field-label">Rejected</div>
+        <ul>
+          <li><strong>A <code>MessageId</code> codec module.</strong> It is a value object with no invariant to protect, which ADR-0016 names as invented ceremony.</li>
+          <li><strong>Widen the rule to "one module".</strong> It weakens a rule that is currently checkable at a glance.</li>
+        </ul>
+      </div>
+
+      <div class="field field--evidence">
+        <div class="field-label">Evidence — why the tiebreaker is correct</div>
+        <p>
+          MongoDB orders <code>BinData</code> by length, then by subtype, then byte by byte. Every
+          message <code>_id</code> is 16 bytes of subtype 4, so the comparison is byte-wise. A UUIDv7
+          leads with a 48-bit timestamp in big-endian order, so byte order equals time order. That
+          order matches the canonical string order the cursor carries. The design now carries a test
+          for this fact.
+        </p>
+      </div>
+    </article>
+
+    <!-- 07 -->
+    <article class="card" id="d07">
+      <div class="card-head">
+        <span class="card-num">07</span>
+        <h3 class="card-title">Where does a search result get its id?</h3>
+        <span class="card-phase">Search</span>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Question asked</div>
+        <p>
+          The Elasticsearch mapping listed <code>tenantId</code>, <code>conversationId</code>,
+          <code>senderId</code>, <code>timestamp</code>, <code>content</code> and
+          <code>metadata</code>. It held no <code>id</code>. Every hit needs one. Should the mapping
+          also become stricter?
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Why it mattered</div>
+        <p>
+          Decision 05 made search return a <code>MessageView</code>, and that view carries an id. The
+          gap would have appeared at run time in slice 5. A strict mapping also closes the failure that
+          <code>metadata</code> already guards against.
+        </p>
+      </div>
+
+      <div class="field field--decision">
+        <div class="field-label">Decision</div>
+        <p>
+          Take the id from <code>hit._id</code>. Add <code>"dynamic": "strict"</code> at the root of
+          the mapping. Store no <code>id</code> field.
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Practical effect</div>
+        <p>
+          ADR-0011 already makes the document id the message id, so a copy in <code>_source</code>
+          would be a second value that nothing keeps in step. The adapter composes
+          <code>{ id: h._id, ...h._source }</code>. An unexpected top-level field now raises a hard
+          error instead of a quiet mapping change. Strictness does not reach inside
+          <code>metadata</code>, because <code>enabled: false</code> means Elasticsearch never parses
+          the content.
+        </p>
+      </div>
+
+      <div class="field field--rejected">
+        <div class="field-label">Rejected</div>
+        <ul>
+          <li><strong>Store <code>id</code> as an unindexed keyword.</strong> It duplicates a value that nothing keeps in sync.</li>
+          <li><strong>Store <code>id</code> as an indexed keyword.</strong> It pays index cost for a field nothing queries.</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 08 -->
+    <article class="card" id="d08">
+      <div class="card-head">
+        <span class="card-num">08</span>
+        <h3 class="card-title">Do the content bounds measure the raw value or the sanitized value?</h3>
+        <span class="card-phase">Boundary</span>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Question asked</div>
+        <p>
+          The design ran <code>sanitize-html</code> in a <code>class-transformer</code>
+          <code>@Transform</code> on the DTO. Does <code>@MaxLength(4000)</code> then apply to what the
+          client sent, or to what sanitization produced?
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Why it mattered</div>
+        <p>
+          <code>ValidationPipe</code> calls <code>plainToInstance</code> before it validates, so a
+          <code>@Transform</code> runs ahead of every validator. That order caused two faults.
+          <code>sanitize-html</code> escapes text entities, so a valid 4000-character message of
+          ampersands grows to about 20 000 characters and gets rejected for a length the client never
+          sent. The blank check in <code>Message.create</code> also became unreachable over HTTP,
+          because the DTO always caught the case first.
+        </p>
+      </div>
+
+      <div class="field field--decision">
+        <div class="field-label">Decision</div>
+        <p>
+          Validate the raw value first. Sanitize afterwards, in a <code>SanitizeContentPipe</code>
+          registered after <code>ValidationPipe</code>. Cap the JSON body at 256 KB.
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Practical effect</div>
+        <p>
+          The client contract now describes what the client sent. Content that sanitizes away to
+          nothing reaches <code>Message.create</code> and fails there. The entity invariant becomes
+          load-bearing instead of decorative. The body cap stops <code>sanitize-html</code> from
+          parsing a megabyte.
+        </p>
+      </div>
+
+      <div class="field field--rejected">
+        <div class="field-label">Rejected</div>
+        <ul>
+          <li><strong>Keep <code>@Transform</code> and bound the output.</strong> One fewer moving part. It measures the wrong string and hides the entity invariant.</li>
+          <li><strong>Transform, then bound both values.</strong> It creates two length rules with different meanings and a confusing error surface.</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 09 -->
+    <article class="card" id="d09">
+      <div class="card-head">
+        <span class="card-num">09</span>
+        <h3 class="card-title">What makes a halted indexer visible?</h3>
+        <span class="card-phase">Reliability</span>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Question asked</div>
+        <p>
+          The design refused a dead-letter queue. It argued that a poison message which halts the
+          indexer is a visible failure, and that a skipped message is silent data loss. What makes the
+          halt visible?
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Why it mattered</div>
+        <p>
+          The consumer runs inside the API process. A halted consumer would leave the API at 201 while
+          search quietly stopped. The failure would then be exactly as silent as the skip it was
+          preferred over. The argument against the dead-letter queue depended on a property the system
+          did not have.
+        </p>
+      </div>
+
+      <div class="field field--decision">
+        <div class="field-label">Decision</div>
+        <p>
+          The consumer records its own liveness. The health route reports it. A stopped indexer returns
+          503 with a degraded status and a reason.
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Practical effect</div>
+        <p>
+          The claim in the design becomes true for a few lines of code. The <code>@Public()</code>
+          health route gains a purpose beyond "the process is up". The check is hand-written.
+          <code>@nestjs/terminus</code> is an official Nest package, but it would be a dependency for
+          one boolean.
+        </p>
+      </div>
+
+      <div class="field field--rejected">
+        <div class="field-label">Rejected</div>
+        <ul>
+          <li><strong>Exit the whole process.</strong> The crash loop is maximally visible. It costs API availability for a search-index fault and demonstrates badly.</li>
+          <li><strong>Log at fatal level only.</strong> "Visible" would then mean "present in stdout".</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 10 -->
+    <article class="card" id="d10">
+      <div class="card-head">
+        <span class="card-num">10</span>
+        <h3 class="card-title">Does search return an envelope or a bare array?</h3>
+        <span class="card-phase">Contract</span>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Question asked</div>
+        <p>
+          The list endpoint returned <code>{ items, nextCursor }</code>. The search endpoint returned a
+          bare array. Should search also return an envelope?
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Why it mattered</div>
+        <p>
+          Two endpoints over one resource returned two container shapes. A reviewer notices that at
+          once. The shape also decides whether deep paging can arrive later without a breaking change.
+        </p>
+      </div>
+
+      <div class="field field--decision">
+        <div class="field-label">Decision</div>
+        <p>Search returns <code>{ items: [...] }</code>. An empty result is <code>200 { items: [] }</code>.</p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Practical effect</div>
+        <p>
+          Both read endpoints now share one shape. A later <code>search_after</code> cursor becomes an
+          additive change. The required edge case for an empty search result changed from
+          <code>200 []</code> to <code>200 { items: [] }</code> in the test matrix.
+        </p>
+      </div>
+
+      <div class="field field--rejected">
+        <div class="field-label">Rejected</div>
+        <ul>
+          <li><strong>Keep the bare array.</strong> It is honest that search carries no pagination state. It costs the shape consistency between sibling endpoints.</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 11 -->
+    <article class="card" id="d11">
+      <div class="card-head">
+        <span class="card-num">11</span>
+        <h3 class="card-title">What happens on a bad <code>limit</code>?</h3>
+        <span class="card-phase">Contract</span>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Question asked</div>
+        <p>
+          The design listed "<code>limit</code> out of bounds" as a test case. It never stated the
+          behaviour. What does the API return for <code>limit=0</code>, <code>limit=101</code> and
+          <code>limit=abc</code>?
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Why it mattered</div>
+        <p>
+          A clamp and a rejection produce different clients. A clamp hides a client bug. The test case
+          could not be written while the behaviour stayed unstated.
+        </p>
+      </div>
+
+      <div class="field field--decision">
+        <div class="field-label">Decision</div>
+        <p>Return 400. Never clamp.</p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Practical effect</div>
+        <p>
+          ADR-0013 says reject, not repair, so this follows the decision record. It also matches
+          <code>forbidNonWhitelisted</code>, which already treats an unexpected field as an error. A
+          client that asks for 500 and silently receives 100 gets wrong information.
+        </p>
+      </div>
+
+      <div class="field field--rejected">
+        <div class="field-label">Rejected</div>
+        <ul>
+          <li><strong>Clamp to the valid range.</strong> It never fails a page fetch. It hides the client bug instead of surfacing it.</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 12 -->
+    <article class="card" id="d12">
+      <div class="card-head">
+        <span class="card-num">12</span>
+        <h3 class="card-title">How is <code>metadata</code> bounded?</h3>
+        <span class="card-phase">Boundary</span>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Question asked</div>
+        <p>
+          The bounds table gave <code>content</code> and <code>conversationId</code> explicit numbers.
+          It left <code>metadata</code> as "optional object". What bounds that field?
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Why it mattered</div>
+        <p>
+          MongoDB stores <code>metadata</code> verbatim. The Elasticsearch <code>_source</code> keeps
+          it too, because <code>enabled: false</code> indexes nothing and stores everything. An
+          unbounded object therefore costs twice. The design already argued that a stated number beats
+          an implicit one.
+        </p>
+      </div>
+
+      <div class="field field--decision">
+        <div class="field-label">Decision</div>
+        <p>
+          Reject <code>metadata</code> whose JSON exceeds 4 KB. Keep the type
+          <code>Record&lt;string, any&gt;</code>.
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Practical effect</div>
+        <p>
+          The field gains a stated limit like every other field. The declared type stays exactly as
+          <code>CONTEXT.md</code> states it. A narrower type of primitives only would depart from the
+          given contract, and a grader could read that as a failure to follow the spec.
+        </p>
+      </div>
+
+      <div class="field field--rejected">
+        <div class="field-label">Rejected</div>
+        <ul>
+          <li><strong>Bound the size and require a flat object.</strong> Stronger, and it rules out deep nesting. It narrows a type that <code>CONTEXT.md</code> declares verbatim.</li>
+          <li><strong>Leave it to the body limit.</strong> Nothing extra to build. The limit stays implicit.</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 13 -->
+    <article class="card" id="d13">
+      <div class="card-head">
+        <span class="card-num">13</span>
+        <h3 class="card-title">What is the latency budget for the publish?</h3>
+        <span class="card-phase">Reliability</span>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Question asked</div>
+        <p>
+          The design said a failed publish still returns 201. It never said how long that takes. What
+          is the budget?
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Why it mattered</div>
+        <p>
+          kafkajs defaults to five retries with exponential backoff and a 30-second send timeout. The
+          <code>idempotent: true</code> flag also forces <code>maxInFlightRequests: 1</code>. Every
+          POST would then take about thirty seconds and return 201 while the broker is down. That is
+          the worst of both outcomes.
+        </p>
+      </div>
+
+      <div class="field field--decision">
+        <div class="field-label">Decision</div>
+        <p>
+          Wait for the send, but bound the wait. Set <code>retry: { retries: 2, initialRetryTime: 100
+          }</code> on the producer and <code>timeout: 2000</code> on the send.
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Practical effect</div>
+        <p>
+          A broker outage costs about two seconds for each POST instead of about thirty. The save still
+          precedes the publish, so the unit test for that order stays meaningful. The service logs a
+          failure at error level and returns 201, because the message already sits in the system of
+          record.
+        </p>
+      </div>
+
+      <div class="field field--rejected">
+        <div class="field-label">Rejected</div>
+        <ul>
+          <li><strong>Fire and forget.</strong> POST latency never depends on Kafka. It loses the save-precedes-publish order and risks an unhandled rejection.</li>
+          <li><strong>Wait with the defaults.</strong> Simplest, and correct under normal conditions. It degrades every write to a 30-second call during an outage.</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 14 -->
+    <article class="card" id="d14">
+      <div class="card-head">
+        <span class="card-num">14</span>
+        <h3 class="card-title">Is a Sender the same thing as the authenticated principal?</h3>
+        <span class="card-phase">Language</span>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Question asked</div>
+        <p>
+          <code>CONTEXT.md</code> defined Message, Conversation, Tenant, Message-created event, Search
+          index and Primary store. It did not define Sender. Is Sender the authenticated principal, or
+          a separate role that coincides with it today?
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Why it mattered</div>
+        <p>
+          The design binds <code>senderId</code> to the <code>sub</code> claim. That binding carries a
+          domain consequence that nothing had stated. The API cannot record a message for anyone but
+          the caller.
+        </p>
+      </div>
+
+      <div class="field field--decision">
+        <div class="field-label">Decision</div>
+        <p>
+          Sender and the authenticated principal are one concept. <code>CONTEXT.md</code> now defines
+          Sender and states the consequence.
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Practical effect</div>
+        <p>
+          Transcript import, system messages and bot-relayed messages are impossible by construction,
+          not merely unbuilt. That limit is now a recorded boundary instead of a later surprise.
+          ADR-0016 forbids a distinction with no invariant behind it, and the source spec holds no
+          visitor role and no agent role.
+        </p>
+      </div>
+
+      <div class="field field--rejected">
+        <div class="field-label">Rejected</div>
+        <ul>
+          <li><strong>Treat them as distinct concepts that coincide today.</strong> It leaves room for a visitor and agent split. It models a difference that neither the spec nor the code makes.</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 15 -->
+    <article class="card" id="d15">
+      <div class="card-head">
+        <span class="card-num">15</span>
+        <h3 class="card-title">How do domain errors map to HTTP statuses?</h3>
+        <span class="card-phase">Contract</span>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Question asked</div>
+        <p>
+          The module map listed <code>domain-exception.filter.ts</code> with the note "DomainError to
+          HTTP status". The design never gave the mapping. What is it?
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Why it mattered</div>
+        <p>
+          The filter cannot be written without the table. One choice is load-bearing. An absent
+          identity context could look like an authentication failure, and a wrong status sends the
+          caller to check a token that was correct.
+        </p>
+      </div>
+
+      <div class="field field--decision">
+        <div class="field-label">Decision</div>
+        <p>Return 400 for client faults and 500 for everything else.</p>
+<pre><code>BlankContentError      -&gt; 400
+InvalidCursorError     -&gt; 400   (malformed base64 or shape)
+CursorDirectionError   -&gt; 400   (desc cursor with sort=asc)
+MissingIdentityError   -&gt; 500   (the guard should have prevented it)
+anything else          -&gt; 500   (logged, message not echoed)</code></pre>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Practical effect</div>
+        <p>
+          A client sees one status for one class of problem, whichever layer caught it. An absent
+          identity context is deliberately not a 401, because the guard already ran and the case means
+          a bug in our wiring.
+        </p>
+      </div>
+
+      <div class="field field--rejected">
+        <div class="field-label">Rejected</div>
+        <ul>
+          <li><strong>Use 422 for semantic faults.</strong> More precise HTTP. It gives two statuses for what a client experiences as one problem.</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 16 -->
+    <article class="card" id="d16">
+      <div class="card-head">
+        <span class="card-num">16</span>
+        <h3 class="card-title">What does a cross-tenant read return?</h3>
+        <span class="card-phase">Security</span>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Question asked</div>
+        <p>
+          The test matrix required a case: tenant B must not read tenant A's conversation. It never
+          stated the expected response. What comes back?
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Why it mattered</div>
+        <p>
+          A 404 and an empty page leak different amounts of information. Tenant isolation exists to
+          withhold exactly this kind of fact.
+        </p>
+      </div>
+
+      <div class="field field--decision">
+        <div class="field-label">Decision</div>
+        <p>Return <code>200 { "items": [], "nextCursor": null }</code>.</p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Practical effect</div>
+        <p>
+          The tenant filter is part of the query, so the conversation does not exist from that caller's
+          view. The response is identical to a <code>conversationId</code> that never existed. Nothing
+          is special-cased and nothing leaks.
+        </p>
+      </div>
+
+      <div class="field field--rejected">
+        <div class="field-label">Rejected</div>
+        <ul>
+          <li><strong>Return 404.</strong> Clearer for a legitimate client that mistyped an id. It needs an existence check the design has no other reason to run, and it confirms that some tenant owns that id. That is a cross-tenant existence oracle.</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 17 -->
+    <article class="card" id="d17">
+      <div class="card-head">
+        <span class="card-num">17</span>
+        <h3 class="card-title">How do the integration tests avoid consumer-group interference?</h3>
+        <span class="card-phase">Tests</span>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Question asked</div>
+        <p>
+          The design fixed two test mechanics: a generated keypair and a random <code>tenantId</code>
+          for each run. Slice 4 puts a Kafka consumer inside the application. How do the tests keep the
+          consumers apart?
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Why it mattered</div>
+        <p>
+          Jest runs test files in parallel workers by default. Every integration file would start
+          another consumer in the same group. The group would then rebalance during a test and move
+          partitions between workers. The replay test would become hard to reason about.
+        </p>
+      </div>
+
+      <div class="field field--decision">
+        <div class="field-label">Decision</div>
+        <p>
+          Split Jest into two projects. Unit tests stay parallel. Integration tests run with
+          <code>maxWorkers: 1</code> and use a random id for the consumer group on each run.
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Practical effect</div>
+        <p>
+          One consumer exists at a time. The committed offsets of a previous run stay out of this run.
+          Unit tests remain parallel and free of infrastructure. One command still runs both projects:
+          <code>nub run test</code>.
+        </p>
+      </div>
+
+      <div class="field field--rejected">
+        <div class="field-label">Rejected</div>
+        <ul>
+          <li><strong>Random group id, keep parallel.</strong> Faster. Several consumers then race to index the same documents.</li>
+          <li><strong>Boot one application in global setup.</strong> Fastest and fully deterministic. It shares mutable fixture state across test files.</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 18 -->
+    <article class="card" id="d18">
+      <div class="card-head">
+        <span class="card-num">18</span>
+        <h3 class="card-title">How does <code>Message.create</code> read the clock?</h3>
+        <span class="card-phase">Domain</span>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Question asked</div>
+        <p>
+          <code>Message.create</code> generates a UUIDv7, which embeds a millisecond. It also sets
+          <code>timestamp</code> from the server clock. Two clock reads can straddle a millisecond. How
+          is the clock handled?
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Why it mattered</div>
+        <p>
+          ADR-0013 justifies the <code>_id</code> tiebreaker partly because a v7 id is broadly
+          chronological. That argument depends on the id and the timestamp agreeing.
+        </p>
+      </div>
+
+      <div class="field field--decision">
+        <div class="field-label">Decision</div>
+        <p>Read <code>Date.now()</code> once. Derive the v7 id and the timestamp from that one value.</p>
+<pre><code>static create(props: CreateProps): Message {
+  const now = Date.now();
+  return new Message(uuidV7(now), new Date(now), /* … */);
+}</code></pre>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Practical effect</div>
+        <p>
+          The millisecond inside the id always equals the exposed timestamp. Tests get determinism from
+          Jest fake timers. A unit test now asserts the agreement.
+        </p>
+      </div>
+
+      <div class="field field--rejected">
+        <div class="field-label">Rejected</div>
+        <ul>
+          <li><strong>Inject a <code>Clock</code> port.</strong> The textbook-pure answer, and trivially testable. It is a port with no invariant behind it, which ADR-0016 forbids.</li>
+          <li><strong>Two reads, accept the skew.</strong> The sort stays a total order either way. The id and the timestamp can then disagree by one millisecond.</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 19 -->
+    <article class="card" id="d19">
+      <div class="card-head">
+        <span class="card-num">19</span>
+        <h3 class="card-title">What produces the <code>explain()</code> result?</h3>
+        <span class="card-phase">Tests</span>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Question asked</div>
+        <p>
+          The design stated that <code>explain()</code> shows an <code>IXSCAN</code> with no
+          <code>SORT</code> stage, and that the output goes in the README. What produces that result?
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Why it mattered</div>
+        <p>
+          A pasted plan is true on the day someone pastes it. A later change to the index or the sort
+          would then degrade the query in silence.
+        </p>
+      </div>
+
+      <div class="field field--decision">
+        <div class="field-label">Decision</div>
+        <p>
+          Assert the plan in an integration test. Add a <code>nub run db:explain</code> script that
+          prints the same plan for the README.
+        </p>
+<pre><code>const plan = await collection.find(keysetFilter)
+  .sort({ timestamp: -1, _id: -1 }).explain('queryPlanner');
+expect(stages(plan)).toContain('IXSCAN');
+expect(stages(plan)).not.toContain('SORT');</code></pre>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Practical effect</div>
+        <p>
+          A change to the index or the sort now fails the build. The claim in the README stays true
+          after the commit that made it.
+        </p>
+      </div>
+
+      <div class="field field--rejected">
+        <div class="field-label">Rejected</div>
+        <ul>
+          <li><strong>A script only.</strong> Less to write. Nothing stops the plan from regressing.</li>
+        </ul>
+      </div>
+    </article>
+  </section>
+
+  <!-- ============ DOC UPDATES ============ -->
+  <section id="doc-updates">
+    <h2>Document updates</h2>
+
+    <h3>CONTEXT.md</h3>
+
+    <p>The session added one term and one recorded ambiguity.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Change</th><th>Content</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>New term — <strong>Sender</strong></td>
+            <td>The authenticated principal that created a message, taken from the token's <code>sub</code> claim. A message can only ever be attributed to its caller. There is no way to record a message on behalf of someone else, and no concept of a system sender or a bot sender. Avoid: author, user, participant.</td>
+          </tr>
+          <tr>
+            <td>New section — <strong>Flagged ambiguities</strong></td>
+            <td>"Sender" and "user" were used interchangeably. Resolved 2026-08-14: there is no <strong>User</strong> in this context. The system owns messages, not identities. Transcript import, system messages and bot-relayed messages are impossible by construction.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Decision records</h3>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ADR</th><th>Action</th><th>Content</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>ADR-0003</td>
+            <td>Amended</td>
+            <td><code>nub</code> cannot transpile Stage 3 decorators, so tsconfig must set both legacy decorator flags. TypeScript is pinned to <code>^5.9</code>. Nest scaffolders are not run at all.</td>
+          </tr>
+          <tr>
+            <td>ADR-0005</td>
+            <td>Amended</td>
+            <td>The earlier text allowed <code>nest new</code> for the initial skeleton. That allowance is withdrawn. No Nest scaffolder runs at any point.</td>
+          </tr>
+          <tr>
+            <td>ADR-0012</td>
+            <td>Amended</td>
+            <td>A global interceptor enters the store. Middleware is too early and a guard cannot wrap execution. The port is named <code>IdentityContext</code> and returns <code>{ tenantId, senderId }</code>. A public route enters no store.</td>
+          </tr>
+          <tr>
+            <td>ADR-0019</td>
+            <td>Amended</td>
+            <td>The Swagger CLI plugin cannot execute under <code>nub</code>. <code>@ApiProperty</code> is written by hand. The superseded paragraph in "Why" is marked.</td>
+          </tr>
+          <tr>
+            <td>ADR-0020</td>
+            <td>Created</td>
+            <td>Read ports return a <code>MessageView</code> projection, not the <code>Message</code> entity. Added to <code>docs/adr/index.md</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Design source</h3>
+
+    <p>
+      The source markdown gained a new section 0 for the toolchain prerequisites. It gained a
+      fourteen-row table of the decisions from this session. It also gained new text in the layer map,
+      the create path, the read paths, the event pipeline, the test plan and the build slices.
+    </p>
+  </section>
+
+  <!-- ============ GLOSSARY ============ -->
+  <section id="glossary">
+    <h2>Glossary</h2>
+
+    <dl class="gloss">
+      <dt>Message</dt>
+      <dd>A single utterance stored in a conversation. It is the unit of work of this system.</dd>
+
+      <dt>Conversation</dt>
+      <dd>The ordered stream of messages that share a <code>conversationId</code>. It is identified, not stored.</dd>
+
+      <dt>Tenant</dt>
+      <dd>The isolation boundary. Every message belongs to exactly one tenant. No read and no write may cross tenants.</dd>
+
+      <dt>Sender</dt>
+      <dd>The authenticated principal that created a message, taken from the token's <code>sub</code> claim.</dd>
+
+      <dt>Primary store</dt>
+      <dd>MongoDB. It is the single system of record.</dd>
+
+      <dt>Search index</dt>
+      <dd>The Elasticsearch representation of messages. It is a derived read model, and MongoDB can rebuild it.</dd>
+
+      <dt>MessageView</dt>
+      <dd>A plain immutable type with no behaviour. Read ports return it in place of the entity.</dd>
+
+      <dt>IdentityContext</dt>
+      <dd>The domain port that returns <code>{ tenantId, senderId }</code>. It throws when the context is absent.</dd>
+
+      <dt>Store</dt>
+      <dd>The <code>AsyncLocalStorage</code> value that holds the identity for one request.</dd>
+
+      <dt>Keyset cursor</dt>
+      <dd>An opaque value that encodes <code>timestamp</code>, <code>id</code> and direction. The query resumes after that position.</dd>
+
+      <dt>Envelope</dt>
+      <dd>The object that wraps a list response, such as <code>{ items, nextCursor }</code>.</dd>
+
+      <dt>Poison message</dt>
+      <dd>An event that fails every retry. It halts the consumer, because this system has no dead-letter queue.</dd>
+
+      <dt>Slice</dt>
+      <dd>One vertical unit of build work. Each slice ends with green tests, a green lint and exactly one commit.</dd>
+    </dl>
+  </section>
+
+</main>
+<script>
+  (() => {
+    const menu = document.querySelector('.section-menu');
+    const decisionsItem = document.querySelector('.section-menu__decisions');
+    const links = [...document.querySelectorAll('.section-menu a[href^="#"]')];
+    const sections = links
+      .map((link) => document.querySelector(link.getAttribute('href')))
+      .filter(Boolean);
+    let scheduled = false;
+
+    const setActiveSection = () => {
+      const marker = window.scrollY + Math.min(160, window.innerHeight * 0.25);
+      let activeSection = sections[0];
+
+      for (const section of sections) {
+        if (section.offsetTop <= marker) activeSection = section;
+      }
+
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
+        activeSection = sections[sections.length - 1];
+      }
+
+      let activeLink;
+
+      for (const link of links) {
+        const isActive = link.getAttribute('href') === `#${activeSection.id}`;
+        link.classList.toggle('is-active', isActive);
+        if (isActive) {
+          activeLink = link;
+          link.setAttribute('aria-current', 'location');
+        }
+        else link.removeAttribute('aria-current');
+      }
+
+      decisionsItem.classList.toggle('has-active-child', activeSection.classList.contains('card'));
+
+      if (activeLink && getComputedStyle(menu).position === 'fixed') {
+        const menuRect = menu.getBoundingClientRect();
+        const linkRect = activeLink.getBoundingClientRect();
+        const inset = 14;
+
+        if (linkRect.top < menuRect.top + inset) {
+          menu.scrollTop -= menuRect.top + inset - linkRect.top;
+        } else if (linkRect.bottom > menuRect.bottom - inset) {
+          menu.scrollTop += linkRect.bottom - menuRect.bottom + inset;
+        }
+      }
+
+      scheduled = false;
+    };
+
+    const scheduleUpdate = () => {
+      if (scheduled) return;
+      scheduled = true;
+      window.requestAnimationFrame(setActiveSection);
+    };
+
+    window.addEventListener('scroll', scheduleUpdate, { passive: true });
+    window.addEventListener('resize', scheduleUpdate);
+    window.addEventListener('hashchange', scheduleUpdate);
+    setActiveSection();
+  })();
+</script>
+</body>
+</html>

@@ -21,6 +21,7 @@ Before generating code, find relevant ADRs by keyword and read them.
 | [0005](0005-ddd-layering.md) | DDD layering with enforced import boundaries | architecture, ddd, layering, lint |
 | [0006](0006-solid-hard-rule.md) | SOLID as a hard rule, token-based DI | solid, dependency-injection |
 | [0016](0016-thin-domain-model.md) | Keep the domain model honestly thin | ddd, domain-model, scope |
+| [0020](0020-read-model-separate-from-entity.md) | Read ports return a `MessageView` projection, not the entity | ddd, cqrs, ports, read-model |
 
 ## Persistence
 
