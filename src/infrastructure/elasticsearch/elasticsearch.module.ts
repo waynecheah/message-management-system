@@ -1,6 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { Client } from '@elastic/elasticsearch';
 import { MESSAGE_INDEXER } from '../../domain/ports/message-indexer.port.ts';
+import { MESSAGE_SEARCHER } from '../../domain/ports/message-searcher.port.ts';
 import { EnvConfig } from '../config/env.config.ts';
 import { MESSAGE_INDEX_MAPPING } from './message-index.mapping.ts';
 
@@ -32,7 +33,8 @@ import { EsMessageIndex } from './es-message-index.ts';
     },
     EsMessageIndex,
     { provide: MESSAGE_INDEXER, useExisting: EsMessageIndex },
+    { provide: MESSAGE_SEARCHER, useExisting: EsMessageIndex },
   ],
-  exports: [MESSAGE_INDEXER, ES_CLIENT],
+  exports: [MESSAGE_INDEXER, MESSAGE_SEARCHER, ES_CLIENT],
 })
 export class ElasticsearchModule {}
