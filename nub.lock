@@ -72,6 +72,9 @@ importers:
       '@nubjs/types':
         specifier: '>=0.4.13 <=0.6.0'
         version: 0.6.0(@types/node@26.2.0)
+      '@types/express':
+        specifier: ^5.0.6
+        version: 5.0.6
       '@types/jest':
         specifier: ^30.0.0
         version: 30.0.0

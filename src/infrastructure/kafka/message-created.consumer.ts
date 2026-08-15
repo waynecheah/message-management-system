@@ -22,8 +22,14 @@ export class MessageCreatedConsumer implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit(): Promise<void> {
-    this.consumer.on('consumer.crash', (event) => {
-      this.markStopped(String(event.payload.error));
+    this.consumer.on('consumer.crash', ({ payload }) => {
+      this.markStopped(String(payload.error));
+    });
+    // kafkajs restarts the consumer itself on a retriable crash and rejoins
+    // the group when the restart succeeds — that rejoin is what clears the
+    // degraded flag, on both the very first boot and every later recovery.
+    this.consumer.on('consumer.group_join', () => {
+      this.state = 'running';
     });
     await this.consumer.connect();
     await this.consumer.subscribe({ topic: this.config.KAFKA_TOPIC, fromBeginning: false });

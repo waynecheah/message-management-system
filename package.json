@@ -18,12 +18,14 @@
     "auth:keygen": "nub scripts/keygen.ts",
     "db:explain": "nub scripts/explain.ts",
     "lint": "nub exec eslint src test",
-    "format": "nub exec prettier --write src test"
+    "format": "nub exec prettier --write src test",
+    "typecheck": "nub exec tsc -p tsconfig.build.json --noEmit"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@nestjs/testing": "^11.1.29",
     "@nubjs/types": ">=0.4.13 <=0.6.0",
+    "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
     "@types/node": "^26",
     "@types/passport-jwt": "^4.0.1",

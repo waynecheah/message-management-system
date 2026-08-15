@@ -41,9 +41,13 @@ describe('GET /api/conversations/:conversationId/messages/search', () => {
   });
 
   afterAll(async () => {
+    // Close the app first so the live consumer stops indexing before we
+    // delete the index — otherwise a late-arriving event could recreate it
+    // via Elasticsearch's dynamic auto-create-index default, defeating the
+    // explicit strict mapping every other index in this suite relies on.
+    await app.close();
     await es.indices.delete({ index: testEnv.ELASTICSEARCH_INDEX }, { ignore: [404] });
     await es.close();
-    await app.close();
   });
 
   const search = (query: string, token = tokenA) =>

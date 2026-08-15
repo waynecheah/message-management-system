@@ -1,6 +1,7 @@
 import request from 'supertest';
 import type { INestApplication } from '@nestjs/common';
 import { Client } from '@elastic/elasticsearch';
+import type { Consumer } from 'kafkajs';
 import { bootstrapTestApp, testEnv } from './app.ts';
 import { signTestToken } from './token.ts';
 import { waitFor } from './wait-for.ts';
@@ -16,9 +17,13 @@ describe('message indexing pipeline', () => {
     es = new Client({ node: testEnv.ELASTICSEARCH_NODE });
   });
   afterAll(async () => {
+    // Close the app first so the live consumer stops indexing before we
+    // delete the index — otherwise a late-arriving event could recreate it
+    // via Elasticsearch's dynamic auto-create-index default, defeating the
+    // explicit strict mapping every other index in this suite relies on.
+    await app.close();
     await es.indices.delete({ index: testEnv.ELASTICSEARCH_INDEX }, { ignore: [404] });
     await es.close();
-    await app.close();
   });
 
   const created = async (content: string) =>
@@ -75,5 +80,20 @@ describe('message indexing pipeline', () => {
     app.get(MessageCreatedConsumer).markStopped('test-induced');
     const res = await request(app.getHttpServer()).get('/health').expect(503);
     expect(res.body).toMatchObject({ status: 'degraded', indexer: 'stopped' });
+  });
+
+  // Runs last: state manipulation in this describe block used to be one-way
+  // (markStopped only), but this proves the real recovery path — a genuine
+  // group rejoin, not a manual state flip — clears the flag kafkajs's own
+  // crash-then-restart cycle would also clear via the same 'consumer.group_join'
+  // listener.
+  it('recovers once the consumer rejoins its group after a stop/restart', async () => {
+    const consumer = app.get(MessageCreatedConsumer);
+    const kafkaConsumer = (consumer as unknown as { consumer: Consumer }).consumer;
+    await kafkaConsumer.stop();
+    await kafkaConsumer.run({ eachMessage: async () => {} });
+    await waitFor(async () => consumer.isRunning());
+    const res = await request(app.getHttpServer()).get('/health').expect(200);
+    expect(res.body).toEqual({ status: 'ok', indexer: 'running' });
   });
 });

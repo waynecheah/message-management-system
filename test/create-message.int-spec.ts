@@ -16,13 +16,17 @@ describe('POST /api/messages', () => {
     es = new Client({ node: testEnv.ELASTICSEARCH_NODE });
   });
   afterAll(async () => {
+    // Close the app first so the live consumer stops indexing before we
+    // delete the index — otherwise a late-arriving event could recreate it
+    // via Elasticsearch's dynamic auto-create-index default, defeating the
+    // explicit strict mapping every other index in this suite relies on.
+    await app.close();
     // Created messages flow through the live indexer into the shared
     // per-process ES index — clean up so they don't pollute readiness
     // checks in other integration files sharing this index (maxWorkers: 1
     // runs them all in one process).
     await es.indices.delete({ index: testEnv.ELASTICSEARCH_INDEX }, { ignore: [404] });
     await es.close();
-    await app.close();
   });
 
   it('creates a message and echoes the sender from the token', async () => {

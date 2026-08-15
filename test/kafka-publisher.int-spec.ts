@@ -16,13 +16,17 @@ describe('Kafka publishing', () => {
     es = new Client({ node: testEnv.ELASTICSEARCH_NODE });
   });
   afterAll(async () => {
+    // Close the app first so the live consumer stops indexing before we
+    // delete the index — otherwise a late-arriving event could recreate it
+    // via Elasticsearch's dynamic auto-create-index default, defeating the
+    // explicit strict mapping every other index in this suite relies on.
+    await app.close();
     // The message published in the test below is consumed by the live
     // indexer and lands in the shared per-process ES index — clean it up so
     // it doesn't pollute readiness checks in other integration files that
     // share this index (maxWorkers: 1 runs them all in one process).
     await es.indices.delete({ index: testEnv.ELASTICSEARCH_INDEX }, { ignore: [404] });
     await es.close();
-    await app.close();
   });
 
   it('creates the topic with the configured partition count', async () => {

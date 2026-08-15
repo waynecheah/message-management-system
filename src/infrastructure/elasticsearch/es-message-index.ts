@@ -60,7 +60,7 @@ export class EsMessageIndex implements MessageIndexer, MessageSearcher {
     });
 
     return response.hits.hits.flatMap((hit) =>
-      hit._source ? [toView(hit._id, hit._source)] : [],
+      hit._id && hit._source ? [toView(hit._id, hit._source)] : [],
     );
   }
 }

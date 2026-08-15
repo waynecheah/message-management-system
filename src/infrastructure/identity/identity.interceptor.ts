@@ -1,4 +1,5 @@
-import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import type { CallHandler, ExecutionContext, NestInterceptor } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import type { Identity } from '../../domain/ports/identity-context.port.ts';
 import { AlsIdentityContext } from './als-identity-context.ts';
