@@ -10,7 +10,7 @@ import {
 } from '../../domain/ports/identity-context.port.ts';
 import type { ListQuery, MessageReader } from '../../domain/ports/message-reader.port.ts';
 import type { MessageWriter } from '../../domain/ports/message-writer.port.ts';
-import { MESSAGES_COLLECTION } from './mongo.module.ts';
+import { MESSAGES_COLLECTION } from './mongo-client.token.ts';
 import {
   toBinaryId,
   toDocument,

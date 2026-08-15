@@ -5,15 +5,10 @@ import { MESSAGE_READER } from '../../domain/ports/message-reader.port.ts';
 import { MESSAGE_WRITER } from '../../domain/ports/message-writer.port.ts';
 import { createIndexes } from './create-indexes.ts';
 import type { MessageDocument } from './message.mapper.ts';
-
-export const MONGO_CLIENT = Symbol('MongoClient');
-export const MESSAGES_COLLECTION = Symbol('MessagesCollection');
-
-// Imported after the token symbols above are assigned: this module and
-// MongoMessageRepository import each other, and Nest's @Inject(MESSAGES_COLLECTION)
-// decorator reads the token at class-definition time, so the token must already
-// be set on this module's exports before the circular require resolves it.
+import { MESSAGES_COLLECTION, MONGO_CLIENT } from './mongo-client.token.ts';
 import { MongoMessageRepository } from './mongo-message.repository.ts';
+
+export { MESSAGES_COLLECTION, MONGO_CLIENT };
 
 @Global()
 @Module({

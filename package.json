@@ -16,6 +16,7 @@
     "test:int": "nub exec jest --selectProjects integration",
     "start": "nub src/main.ts",
     "auth:keygen": "nub scripts/keygen.ts",
+    "db:explain": "nub scripts/explain.ts",
     "lint": "nub exec eslint src test",
     "format": "nub exec prettier --write src test"
   },
@@ -49,6 +50,7 @@
     "@nestjs/swagger": "^11.4.6",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
+    "express": "^5.2.1",
     "kafkajs": "^2.2.4",
     "mongodb": "^7.5.0",
     "passport": "^0.7.0",

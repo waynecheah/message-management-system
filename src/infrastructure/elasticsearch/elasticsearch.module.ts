@@ -4,14 +4,10 @@ import { MESSAGE_INDEXER } from '../../domain/ports/message-indexer.port.ts';
 import { MESSAGE_SEARCHER } from '../../domain/ports/message-searcher.port.ts';
 import { EnvConfig } from '../config/env.config.ts';
 import { MESSAGE_INDEX_MAPPING } from './message-index.mapping.ts';
-
-export const ES_CLIENT = Symbol('ElasticsearchClient');
-
-// Imported after the token symbol above is assigned: this module and
-// EsMessageIndex import each other, and Nest's @Inject(ES_CLIENT) decorator
-// reads the token at class-definition time, so the token must already be set on
-// this module's exports before the circular require resolves it.
+import { ES_CLIENT } from './es-client.token.ts';
 import { EsMessageIndex } from './es-message-index.ts';
+
+export { ES_CLIENT };
 
 @Global()
 @Module({

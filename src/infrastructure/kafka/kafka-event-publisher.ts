@@ -3,7 +3,7 @@ import { Kafka, type Producer } from 'kafkajs';
 import type { MessageCreatedEvent } from '../../domain/message-created.event.ts';
 import type { EventPublisher } from '../../domain/ports/event-publisher.port.ts';
 import { EnvConfig } from '../config/env.config.ts';
-import { KAFKA_CLIENT } from './kafka.module.ts';
+import { KAFKA_CLIENT } from './kafka-client.token.ts';
 
 @Injectable()
 export class KafkaEventPublisher implements EventPublisher, OnModuleInit, OnModuleDestroy {

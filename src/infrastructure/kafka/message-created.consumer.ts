@@ -5,7 +5,7 @@ import { Kafka, type Consumer } from 'kafkajs';
 import { IndexMessage } from '../../application/index-message.usecase.ts';
 import type { MessageCreatedEvent } from '../../domain/message-created.event.ts';
 import { EnvConfig } from '../config/env.config.ts';
-import { KAFKA_CLIENT } from './kafka.module.ts';
+import { KAFKA_CLIENT } from './kafka-client.token.ts';
 
 @Injectable()
 export class MessageCreatedConsumer implements OnModuleInit, OnModuleDestroy {

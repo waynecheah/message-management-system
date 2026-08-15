@@ -3,16 +3,11 @@ import { Kafka } from 'kafkajs';
 import { IndexMessage } from '../../application/index-message.usecase.ts';
 import { EVENT_PUBLISHER } from '../../domain/ports/event-publisher.port.ts';
 import { EnvConfig } from '../config/env.config.ts';
-
-export const KAFKA_CLIENT = Symbol('KafkaClient');
-
-// Imported after the token symbol above is assigned: this module and both
-// KafkaEventPublisher and MessageCreatedConsumer import each other, and Nest's
-// @Inject(KAFKA_CLIENT) decorator reads the token at class-definition time, so
-// the token must already be set on this module's exports before the circular
-// require resolves it.
+import { KAFKA_CLIENT } from './kafka-client.token.ts';
 import { KafkaEventPublisher } from './kafka-event-publisher.ts';
 import { MessageCreatedConsumer } from './message-created.consumer.ts';
+
+export { KAFKA_CLIENT };
 
 @Global()
 @Module({

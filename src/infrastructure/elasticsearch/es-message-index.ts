@@ -6,7 +6,7 @@ import type { MessageIndexer } from '../../domain/ports/message-indexer.port.ts'
 import type { MessageSearcher, SearchQuery } from '../../domain/ports/message-searcher.port.ts';
 import { IDENTITY_CONTEXT, type IdentityContext } from '../../domain/ports/identity-context.port.ts';
 import { EnvConfig } from '../config/env.config.ts';
-import { ES_CLIENT } from './elasticsearch.module.ts';
+import { ES_CLIENT } from './es-client.token.ts';
 
 type EsMessageSource = {
   conversationId: string;
