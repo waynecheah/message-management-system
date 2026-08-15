@@ -5,7 +5,7 @@ import { AppModule } from '../src/app.module.ts';
 import { EnvConfig, validateEnv } from '../src/infrastructure/config/env.config.ts';
 import { TEST_AUDIENCE, TEST_ISSUER, TEST_PUBLIC_KEY } from './token.ts';
 
-const testEnv = validateEnv({
+export const testEnv = validateEnv({
   MONGO_URL: 'mongodb://localhost:27017',
   MONGO_DB: `messages_test_${process.pid}`,
   KAFKA_BROKERS: 'localhost:9092',
