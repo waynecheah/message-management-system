@@ -9,7 +9,7 @@ describe('GET /health', () => {
 
   it('returns ok', async () => {
     const res = await request(app.getHttpServer()).get('/health').expect(200);
-    expect(res.body).toEqual({ status: 'ok' });
+    expect(res.body).toEqual({ status: 'ok', indexer: 'running' });
   });
 
   it('is reachable with no Authorization header', async () => {

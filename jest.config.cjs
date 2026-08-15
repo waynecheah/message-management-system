@@ -3,6 +3,10 @@ module.exports = {
   // the *global* config, so a `testTimeout` inside a `projects` entry is parsed
   // and then ignored, silently leaving integration tests on the 5s default.
   testTimeout: 30000,
+  // Root level for the same reason: jest reads `maxWorkers` from the global
+  // config, so a `projects` entry's copy is ignored and the integration specs
+  // fan out across workers that share one Kafka topic and trip over each other.
+  maxWorkers: 1,
   projects: [
     {
       displayName: 'unit',
@@ -16,7 +20,6 @@ module.exports = {
       rootDir: '.',
       testMatch: ['<rootDir>/test/**/*.int-spec.ts'],
       transform: { '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.spec.json' }] },
-      maxWorkers: 1,
       testEnvironment: '<rootDir>/no-temporal-environment.cjs',
     },
   ],
