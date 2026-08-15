@@ -1,6 +1,7 @@
 import { Global, Inject, Module, type OnApplicationShutdown } from '@nestjs/common';
 import { MongoClient } from 'mongodb';
 import { EnvConfig } from '../config/env.config.ts';
+import { MESSAGE_READER } from '../../domain/ports/message-reader.port.ts';
 import { MESSAGE_WRITER } from '../../domain/ports/message-writer.port.ts';
 import { createIndexes } from './create-indexes.ts';
 import type { MessageDocument } from './message.mapper.ts';
@@ -37,8 +38,9 @@ import { MongoMessageRepository } from './mongo-message.repository.ts';
     },
     MongoMessageRepository,
     { provide: MESSAGE_WRITER, useExisting: MongoMessageRepository },
+    { provide: MESSAGE_READER, useExisting: MongoMessageRepository },
   ],
-  exports: [MESSAGE_WRITER, MESSAGES_COLLECTION],
+  exports: [MESSAGE_WRITER, MESSAGE_READER, MESSAGES_COLLECTION],
 })
 export class MongoModule implements OnApplicationShutdown {
   constructor(@Inject(MONGO_CLIENT) private readonly client: MongoClient) {}

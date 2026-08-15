@@ -14,6 +14,7 @@ module.exports = {
       transform: { '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.spec.json' }] },
       maxWorkers: 1,
       testTimeout: 30000,
+      testEnvironment: '<rootDir>/no-temporal-environment.cjs',
     },
   ],
 };
