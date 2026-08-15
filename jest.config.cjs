@@ -5,6 +5,7 @@ module.exports = {
       rootDir: '.',
       testMatch: ['<rootDir>/src/**/*.spec.ts'],
       transform: { '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.spec.json' }] },
+      testEnvironment: '<rootDir>/no-temporal-environment.cjs',
     },
     {
       displayName: 'integration',
