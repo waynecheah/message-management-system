@@ -1,5 +1,7 @@
 # tawk-message-management
 
+![System Architecture](docs/images/message-management-system-architecture.png "Message Management System Architecture")
+
 ## What it is
 
 A multi-tenant message-management service, built as a senior engineer code
@@ -11,6 +13,10 @@ read model). The domain vocabulary, API contract and non-functional
 requirements this repo implements are the source of truth in
 [`CONTEXT.md`](CONTEXT.md); every architectural decision below is backed by an
 ADR in [`docs/adr/`](docs/adr/index.md).
+
+> 📐 [Architectural Decisions Record](https://message-management.pages.dev/adr/) — 20 records detailing stack choices, architectural tradeoffs, and design decisions.
+
+> 📄 [Project Specification](https://message-management.pages.dev/spec/) — interactive design document covering system architecture, data models, API design, and testing strategy.
 
 ## Setup
 
