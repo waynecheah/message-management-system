@@ -1,4 +1,8 @@
 module.exports = {
+  // Root level, not per-project: jest-circus takes the per-test deadline from
+  // the *global* config, so a `testTimeout` inside a `projects` entry is parsed
+  // and then ignored, silently leaving integration tests on the 5s default.
+  testTimeout: 30000,
   projects: [
     {
       displayName: 'unit',
@@ -13,7 +17,6 @@ module.exports = {
       testMatch: ['<rootDir>/test/**/*.int-spec.ts'],
       transform: { '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.spec.json' }] },
       maxWorkers: 1,
-      testTimeout: 30000,
       testEnvironment: '<rootDir>/no-temporal-environment.cjs',
     },
   ],
