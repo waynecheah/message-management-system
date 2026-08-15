@@ -11,4 +11,8 @@ describe('GET /health', () => {
     const res = await request(app.getHttpServer()).get('/health').expect(200);
     expect(res.body).toEqual({ status: 'ok' });
   });
+
+  it('is reachable with no Authorization header', async () => {
+    await request(app.getHttpServer()).get('/health').expect(200);
+  });
 });
