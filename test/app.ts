@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module.ts';
+import { configure } from '../src/main.ts';
 import { EnvConfig, validateEnv } from '../src/infrastructure/config/env.config.ts';
 import { TEST_AUDIENCE, TEST_ISSUER, TEST_PUBLIC_KEY } from './token.ts';
 
@@ -25,6 +26,7 @@ export async function bootstrapTestApp(): Promise<INestApplication> {
     .useValue(testEnv)
     .compile();
   const app = moduleRef.createNestApplication();
+  configure(app);
   await app.init();
   return app;
 }
