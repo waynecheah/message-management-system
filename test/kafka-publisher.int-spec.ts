@@ -1,16 +1,29 @@
 import type { INestApplication } from '@nestjs/common';
 import { Kafka } from 'kafkajs';
 import request from 'supertest';
+import { Client } from '@elastic/elasticsearch';
 import { bootstrapTestApp, testEnv } from './app.ts';
 import { signTestToken } from './token.ts';
 import { waitFor } from './wait-for.ts';
 
 describe('Kafka publishing', () => {
   let app: INestApplication;
+  let es: Client;
   const token = signTestToken({ tid: 'tenant-a', sub: 'sender-1' });
 
-  beforeAll(async () => { app = await bootstrapTestApp(); });
-  afterAll(async () => { await app.close(); });
+  beforeAll(async () => {
+    app = await bootstrapTestApp();
+    es = new Client({ node: testEnv.ELASTICSEARCH_NODE });
+  });
+  afterAll(async () => {
+    // The message published in the test below is consumed by the live
+    // indexer and lands in the shared per-process ES index — clean it up so
+    // it doesn't pollute readiness checks in other integration files that
+    // share this index (maxWorkers: 1 runs them all in one process).
+    await es.indices.delete({ index: testEnv.ELASTICSEARCH_INDEX }, { ignore: [404] });
+    await es.close();
+    await app.close();
+  });
 
   it('creates the topic with the configured partition count', async () => {
     const admin = new Kafka({ clientId: 'assert', brokers: [testEnv.KAFKA_BROKERS] }).admin();

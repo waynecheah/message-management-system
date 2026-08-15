@@ -1,16 +1,19 @@
 import request from 'supertest';
 import type { INestApplication } from '@nestjs/common';
-import { bootstrapTestApp } from './app.ts';
+import { Client } from '@elastic/elasticsearch';
+import { bootstrapTestApp, testEnv } from './app.ts';
 import { signTestToken } from './token.ts';
 
 describe('GET /api/conversations/:conversationId/messages', () => {
   let app: INestApplication;
+  let es: Client;
   const tokenA = signTestToken({ tid: 'tenant-a', sub: 'sender-1' });
   const tokenB = signTestToken({ tid: 'tenant-b', sub: 'sender-2' });
   const url = '/api/conversations/listing/messages';
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
+    es = new Client({ node: testEnv.ELASTICSEARCH_NODE });
     for (let i = 0; i < 3; i += 1) {
       await request(app.getHttpServer()).post('/api/messages')
         .set({ Authorization: `Bearer ${tokenA}` })
@@ -18,7 +21,15 @@ describe('GET /api/conversations/:conversationId/messages', () => {
       await new Promise((r) => setTimeout(r, 2));
     }
   });
-  afterAll(async () => { await app.close(); });
+  afterAll(async () => {
+    // Created messages flow through the live indexer into the shared
+    // per-process ES index — clean up so they don't pollute readiness
+    // checks in other integration files sharing this index (maxWorkers: 1
+    // runs them all in one process).
+    await es.indices.delete({ index: testEnv.ELASTICSEARCH_INDEX }, { ignore: [404] });
+    await es.close();
+    await app.close();
+  });
 
   const get = (query = '') =>
     request(app.getHttpServer()).get(`${url}${query}`).set({ Authorization: `Bearer ${tokenA}` });

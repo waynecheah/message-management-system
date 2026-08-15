@@ -1,16 +1,29 @@
 import request from 'supertest';
 import type { INestApplication } from '@nestjs/common';
-import { bootstrapTestApp } from './app.ts';
+import { Client } from '@elastic/elasticsearch';
+import { bootstrapTestApp, testEnv } from './app.ts';
 import { signTestToken } from './token.ts';
 
 describe('POST /api/messages', () => {
   let app: INestApplication;
+  let es: Client;
   const token = signTestToken({ tid: 'tenant-a', sub: 'sender-1' });
   const auth = () => ({ Authorization: `Bearer ${token}` });
   const post = () => request(app.getHttpServer()).post('/api/messages');
 
-  beforeAll(async () => { app = await bootstrapTestApp(); });
-  afterAll(async () => { await app.close(); });
+  beforeAll(async () => {
+    app = await bootstrapTestApp();
+    es = new Client({ node: testEnv.ELASTICSEARCH_NODE });
+  });
+  afterAll(async () => {
+    // Created messages flow through the live indexer into the shared
+    // per-process ES index — clean up so they don't pollute readiness
+    // checks in other integration files sharing this index (maxWorkers: 1
+    // runs them all in one process).
+    await es.indices.delete({ index: testEnv.ELASTICSEARCH_INDEX }, { ignore: [404] });
+    await es.close();
+    await app.close();
+  });
 
   it('creates a message and echoes the sender from the token', async () => {
     const res = await post().set(auth())

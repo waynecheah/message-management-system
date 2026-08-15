@@ -16,21 +16,28 @@ describe('GET /api/conversations/:conversationId/messages/search', () => {
     app = await bootstrapTestApp();
     es = new Client({ node: testEnv.ELASTICSEARCH_NODE });
 
-    const post = (token: string, content: string) =>
-      request(app.getHttpServer()).post('/api/messages')
+    const post = async (token: string, content: string) =>
+      (await request(app.getHttpServer()).post('/api/messages')
         .set({ Authorization: `Bearer ${token}` })
-        .send({ conversationId: 'searchable', content }).expect(201);
+        .send({ conversationId: 'searchable', content }).expect(201)).body;
 
-    await post(tokenA, 'the quick brown fox');
-    await post(tokenA, 'a slow green turtle');
-    await post(tokenB, 'the quick brown fox belonging to tenant b');
+    const posted = await Promise.all([
+      post(tokenA, 'the quick brown fox'),
+      post(tokenA, 'a slow green turtle'),
+      post(tokenB, 'the quick brown fox belonging to tenant b'),
+    ]);
 
-    // Wait for the consumer to index, then make the writes visible to search.
+    // Wait for the consumer to index this test's own messages specifically —
+    // a generic collection-wide count can be satisfied by leftover documents
+    // from other test files sharing this same per-process ES index.
     await waitFor(async () => {
-      await es.indices.refresh({ index: testEnv.ELASTICSEARCH_INDEX });
-      const count = await es.count({ index: testEnv.ELASTICSEARCH_INDEX });
-      return count.count >= 3;
+      const exists = await Promise.all(
+        posted.map((message: { id: string }) =>
+          es.exists({ index: testEnv.ELASTICSEARCH_INDEX, id: message.id })),
+      );
+      return exists.every(Boolean);
     });
+    await es.indices.refresh({ index: testEnv.ELASTICSEARCH_INDEX });
   });
 
   afterAll(async () => {
