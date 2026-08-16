@@ -12,7 +12,7 @@ the review round. See Network below for why.
 
 ## Inputs
 
-- `repo`: optional `owner/name`; default to `waynecheah/monorepo` when omitted.
+- `repo`: optional `owner/name`; default to `waynecheah/message-management-system` when omitted.
 - `pr_number`: required PR number.
 - `commit`: required commit SHA or commit range.
   - Single commit examples: `d1e77b5`, `d1e77b5abc...`
