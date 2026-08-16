@@ -45,9 +45,18 @@ this removes a layer rather than adding one.
 - **Nothing declares indexes for you now.** With the ODM gone, index creation is
   our responsibility — hence the explicit startup step. Forgetting it silently
   costs the graded query performance.
-- **No built-in schema validation.** Document shape correctness rests on the
+- **We do not enable MongoDB's own schema validation either.** MongoDB supports
+  collection-level `$jsonSchema` validators, a server feature independent of the
+  driver or any ODM — it is not something dropping Mongoose costs us. We choose
+  not to enable it: it would duplicate the DTO / `class-validator` check at the
+  boundary in a second location, and it would put validation logic in the
+  persistence layer rather than at the boundary, against the DDD layering in
+  [ADR-0005](0005-ddd-layering.md). Document shape correctness rests on the
   mapper and on the DTO validation at the boundary
   ([ADR-0015](0015-input-validation-sanitization.md)).
+  **Amended 2026-08-14** — the earlier wording claimed MongoDB has no built-in
+  schema validation at all, which is incorrect; `$jsonSchema` validators are a
+  real MongoDB feature (https://www.mongodb.com/docs/manual/core/schema-validation/).
 - More boilerplate per aggregate. Acceptable at one aggregate; it would need
   revisiting at a dozen.
 

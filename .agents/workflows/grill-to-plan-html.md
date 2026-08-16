@@ -139,6 +139,21 @@ Use these skills through Claude Code CLI:
 
    Avoid cards that only state conclusions such as "Inventory scope: v1 is reservation lifecycle and concurrency handling." That is too compressed. The review should let a reader reconstruct the grill conversation without needing the chat transcript.
 
+   Add a section menu to the right side of the review HTML:
+
+   - Use one link for each top-level review section.
+   - When a section contains decision cards, add a nested submenu with one link for every card.
+   - Give every decision card a unique `id` and point its submenu link to that `id`.
+   - Point every link to an existing unique section `id`.
+   - Keep the menu fixed on the right while the reader scrolls on desktop screens.
+   - Move the menu into the normal page flow on narrow screens so that it does not cover the review.
+   - Smoothly scroll to the target section when the reader selects a link.
+   - Highlight the link for the current section with a different color as the reader scrolls.
+   - Highlight the most specific current link. A visible decision card highlights its submenu link rather than only the parent Decisions link.
+   - Keep the active submenu link visible inside the fixed menu when the menu has its own scrollbar.
+   - Update `aria-current` with the highlighted link for assistive technology.
+   - Implement the menu with self-contained HTML, inline CSS, and inline JavaScript. Do not add an external library.
+
    Keep the HTML self-contained with inline CSS. Avoid external assets.
 
 ## Decision Rules

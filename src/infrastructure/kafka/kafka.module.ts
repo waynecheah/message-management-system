@@ -1,0 +1,40 @@
+import { Global, Module } from '@nestjs/common';
+import { Kafka } from 'kafkajs';
+import { IndexMessage } from '../../application/index-message.usecase.ts';
+import { EVENT_PUBLISHER } from '../../domain/ports/event-publisher.port.ts';
+import { EnvConfig } from '../config/env.config.ts';
+import { KAFKA_CLIENT } from './kafka-client.token.ts';
+import { KafkaEventPublisher } from './kafka-event-publisher.ts';
+import { MessageCreatedConsumer } from './message-created.consumer.ts';
+
+export { KAFKA_CLIENT };
+
+@Global()
+@Module({
+  providers: [
+    {
+      provide: KAFKA_CLIENT,
+      inject: [EnvConfig],
+      useFactory: async (config: EnvConfig) => {
+        const kafka = new Kafka({
+          clientId: 'message-management',
+          brokers: config.KAFKA_BROKERS.split(','),
+        });
+        // Auto-create is off in compose: one partition would erase the topology (ADR-0010)
+        const admin = kafka.admin();
+        await admin.connect();
+        await admin.createTopics({
+          topics: [{ topic: config.KAFKA_TOPIC, numPartitions: config.KAFKA_PARTITIONS }],
+        });
+        await admin.disconnect();
+        return kafka;
+      },
+    },
+    KafkaEventPublisher,
+    { provide: EVENT_PUBLISHER, useExisting: KafkaEventPublisher },
+    IndexMessage,
+    MessageCreatedConsumer,
+  ],
+  exports: [EVENT_PUBLISHER, KAFKA_CLIENT, MessageCreatedConsumer],
+})
+export class KafkaModule {}

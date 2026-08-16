@@ -132,7 +132,9 @@ not in scripts, not in the README, not in CI.
   and its scaffolder generates feature modules. **Never run `nest g resource` or
   `nest g service`** — they produce a controller/service/entity folder that
   violates the layering. Create files by hand in the correct layer. `nest new`
-  is fine for the initial skeleton, which is then restructured.
+  is excluded too (ADR-0005, amended 2026-08-14) — it selects its own package
+  manager and emits npm-flavoured scripts (ADR-0003). No Nest scaffolder is run
+  at any point; the skeleton is hand-written.
 - Business logic lives in the domain and application layers only. Controllers
   stay thin, repositories stay dumb.
 - The layering is enforced by an ESLint `import/no-restricted-paths` boundary,

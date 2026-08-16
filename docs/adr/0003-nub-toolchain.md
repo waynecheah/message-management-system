@@ -52,8 +52,20 @@ script: `nub run test`.
 
 - Third-party documentation and generated scaffolding will assume `npm`. Every
   such command must be translated on the way in.
-- `nest new` and similar scaffolders may emit npm-flavoured scripts; these have
-  to be corrected rather than accepted as generated.
+- `nest new` and similar scaffolders emit npm-flavoured scripts. **Amended
+  2026-08-14: they are not run at all** — see
+  [ADR-0005](0005-ddd-layering.md); the skeleton is hand-written.
+- **`nub` cannot transpile Stage 3 decorators** (an oxc limitation). NestJS,
+  `class-validator` and `@nestjs/swagger` are all written against *legacy*
+  decorators, so `tsconfig.json` must set `experimentalDecorators: true` and
+  `emitDecoratorMetadata: true`. Without them the application does not start.
+  Verified by probe against `nub` 0.6.0 / Node 24.12; ESM,
+  `verbatimModuleSyntax` and `allowImportingTsExtensions` are all compatible
+  with those flags.
+- **TypeScript is pinned to `^5.9`, not `^7`.** `nub` transpiles at runtime, so
+  TypeScript serves only typecheck, lint and `ts-jest` — and `ts-jest` and
+  `typescript-eslint` are built against the 5.x compiler API rather than the
+  native `tsgo` one.
 
 ## Rules for agents
 

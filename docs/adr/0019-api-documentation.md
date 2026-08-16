@@ -15,8 +15,21 @@ Accepted — 2026-08-13
 
 ## Decision
 
-Generate OpenAPI documentation with **`@nestjs/swagger`**, with its **CLI plugin
-enabled**, served at `/api/docs`.
+Generate OpenAPI documentation with **`@nestjs/swagger`**, served at
+`/api/docs`.
+
+**Amended 2026-08-14 — the CLI plugin is not used.** It is a TypeScript
+transformer that the Nest CLI applies during `nest build` / `nest start` via
+`nest-cli.json`. This project runs `.ts` directly through `nub`
+([ADR-0003](0003-nub-toolchain.md)), whose oxc-based transform layer exposes no
+transformer hook, and no Nest CLI is invoked at any point
+([ADR-0005](0005-ddd-layering.md), amended). The plugin therefore cannot
+execute. `@ApiProperty()` / `@ApiPropertyOptional()` are written **by hand** on
+the four DTOs — about a dozen fields, since `senderId` and `timestamp` are
+server-assigned and every remaining field is a primitive. The "Why" below is
+otherwise unchanged; only the setup cost moves from near-zero to roughly fifteen
+minutes, and the "Rules for agents" requirement to explain a disabled plugin in
+the README now applies.
 
 No alternative renderer (Scalar, Redoc, Stoplight). No contract-first rewrite
 (`ts-rest`, `nestjs-zod`).
@@ -35,15 +48,11 @@ gets a live, executable description of three endpoints and their exact request
 and response shapes, which is faster than reading controllers. That is a real
 return for one package and about ten lines of setup.
 
-**The CLI plugin removes the usual objection.** The standard complaint about
-`@nestjs/swagger` is `@ApiProperty()` on every field. The plugin infers
-properties from TypeScript types and existing `class-validator` decorators, so
-explicit decorators are needed only for descriptions and examples:
-
-```jsonc
-// nest-cli.json
-"compilerOptions": { "plugins": ["@nestjs/swagger"] }
-```
+**~~The CLI plugin removes the usual objection.~~** *Superseded by the 2026-08-14
+amendment — the plugin cannot run here.* The standard complaint about
+`@nestjs/swagger` is `@ApiProperty()` on every field, and that cost is paid in
+full. It stays small only because the surface is small: three endpoints, four
+DTOs, no nested request models.
 
 ## How it works
 

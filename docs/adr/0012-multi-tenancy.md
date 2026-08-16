@@ -60,6 +60,40 @@ caller could assert any tenant. That mechanism is superseded by
 claim. The enforcement below is unchanged — only the trustworthiness of its
 input improved.
 
+**Amended 2026-08-14 — the store is entered by a global interceptor, not by
+middleware or by the guard.** Two corrections:
+
+- **Middleware is too early.** Nest's order is middleware → guards →
+  interceptors → pipes → handler. Middleware runs before the token has been
+  verified, so it has nothing trustworthy to store.
+- **A guard cannot do it either.** `canActivate` returns a boolean; an
+  `als.run(cb)` inside it exits the moment the guard returns. The alternative,
+  `als.enterWith()`, binds the store to the remainder of the current async
+  resource rather than to a bounded callback — Node discourages it and it risks
+  bleeding across requests.
+
+An `APP_INTERCEPTOR` runs after the guard and *wraps* execution, so `als.run()`
+covers the pipes, the handler, the use case and the repository:
+
+```ts
+intercept(ctx: ExecutionContext, next: CallHandler) {
+  const { user } = ctx.switchToHttp().getRequest();
+  return new Observable((sub) =>
+    als.run({ tenantId: user.tenantId, senderId: user.senderId },
+      () => next.handle().subscribe(sub)));
+}
+```
+
+On a `@Public()` route (the health check) there is no `user`, so **no store is
+entered at all** rather than an empty one. Anything downstream calling
+`require()` then throws, which is the fail-closed behaviour this ADR already
+demands.
+
+**The port is named `IdentityContext`, not `TenantContext`**, and returns
+`{ tenantId, senderId }`. The create use case needs the sender, and
+[ADR-0018](0018-jwt-authentication.md) forbids the controller passing identity
+in. The `Good pattern` below still applies verbatim under the new name.
+
 ## How it works
 
 - **MongoDB** — `tenantId` is the **leading field** of every compound index, so

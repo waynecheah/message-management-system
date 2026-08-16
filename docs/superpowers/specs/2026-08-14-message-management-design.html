@@ -1,0 +1,1637 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design — Message Management System</title>
+<style>
+  :root {
+    --ink: #16181d;
+    --ink-soft: #4a5058;
+    --ink-mute: #767d87;
+    --rule: #e3e6ea;
+    --rule-soft: #eef0f3;
+    --flow-line: #c6ccd6;
+    --bg: #ffffff;
+    --bg-soft: #f7f8fa;
+    --accent: #2f6fd0;
+    --green: #1f7a44;
+    --green-bg: #e8f5ed;
+    --amber: #8a5a00;
+    --amber-bg: #fdf3e0;
+    --red: #a32b2b;
+    --red-bg: #fbeceb;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.65;
+  }
+
+  /* ---------- layout ---------- */
+
+  .spec-shell {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 72px 28px 128px;
+  }
+
+  .spec-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 236px;
+    gap: 56px;
+    align-items: start;
+  }
+
+  .spec-page {
+    max-width: 760px;
+    min-width: 0;
+  }
+
+  /* ---------- on this page ---------- */
+
+  .spec-toc {
+    position: sticky;
+    top: 32px;
+    margin-top: 58px;
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .spec-toc-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin: 0 0 14px;
+  }
+
+  .spec-toc ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .spec-toc li { margin: 0 0 2px; }
+
+  .spec-toc a {
+    display: block;
+    padding: 4px 0;
+    color: var(--ink-soft);
+    text-decoration: none;
+  }
+
+  .spec-toc a:hover,
+  .spec-toc a:focus-visible {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+
+  .spec-toc > nav > ul > li > a {
+    color: var(--ink);
+    font-weight: 550;
+  }
+
+  .spec-toc ul ul {
+    margin: 0 0 8px;
+    padding-left: 14px;
+    border-left: 1px solid var(--rule);
+  }
+
+  .spec-toc ul ul a {
+    font-size: 12.5px;
+    color: var(--ink-mute);
+  }
+
+  /* the section currently in view */
+  .spec-toc a.is-active {
+    color: var(--accent);
+    font-weight: 650;
+  }
+  .spec-toc ul ul a.is-active {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* an anchor jump must not sit flush against the viewport top */
+  .spec-section,
+  .spec-section h3 { scroll-margin-top: 24px; }
+
+  /* ---------- header ---------- */
+
+  .spec-header {
+    padding-bottom: 30px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .spec-header > * { max-width: 760px; }
+
+  .spec-meta {
+    font-size: 12px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 14px;
+  }
+
+  .spec-title {
+    font-size: 38px;
+    line-height: 1.18;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 18px;
+  }
+
+  .spec-description {
+    font-size: 18px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+    margin: 0 0 26px;
+  }
+
+  .spec-status { margin-bottom: 14px; }
+
+  .spec-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border: 1px solid transparent;
+  }
+  .spec-badge--approved   { background: var(--green-bg); color: var(--green); border-color: #c3e3d0; }
+  .spec-badge--draft      { background: #f0f1f3; color: var(--ink-soft); border-color: var(--rule); }
+  .spec-badge--superseded { background: var(--amber-bg); color: var(--amber); border-color: #efdcb6; }
+  .spec-badge--implemented{ background: #e9f0fb; color: var(--accent); border-color: #c6d8f2; }
+
+  .spec-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 22px;
+  }
+
+  .spec-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--bg-soft);
+    border: 1px solid var(--rule-soft);
+    color: var(--ink-mute);
+    font-size: 12.5px;
+  }
+
+  .spec-source {
+    font-size: 13.5px;
+    color: var(--ink-mute);
+  }
+  .spec-source a { color: var(--accent); text-decoration: none; }
+  .spec-source a:hover { text-decoration: underline; }
+  .spec-source-meta::before { content: "·"; margin: 0 8px; color: var(--rule); }
+
+  /* ---------- sections ---------- */
+
+  .spec-section { margin-top: 58px; }
+
+  .spec-section > h2 {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin: 0 0 26px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .spec-section h3 {
+    font-size: 19px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    margin: 38px 0 12px;
+  }
+
+  .spec-section h4 {
+    font-size: 15.5px;
+    font-weight: 650;
+    margin: 26px 0 10px;
+  }
+
+  .spec-section > h3:first-of-type { margin-top: 0; }
+
+  p { margin: 0 0 16px; }
+
+  ul, ol { margin: 0 0 18px; padding-left: 22px; }
+  li { margin-bottom: 8px; }
+  li > ul, li > ol { margin-top: 8px; margin-bottom: 4px; }
+
+  strong { font-weight: 650; }
+
+  /* ---------- code ---------- */
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.875em;
+    background: var(--bg-soft);
+    border: 1px solid var(--rule-soft);
+    border-radius: 4px;
+    padding: 1px 5px;
+    white-space: nowrap;
+  }
+
+  pre {
+    background: var(--bg-soft);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    margin: 0 0 20px;
+    line-height: 1.55;
+  }
+
+  pre code {
+    background: none;
+    border: 0;
+    padding: 0;
+    font-size: 13px;
+    white-space: pre;
+  }
+
+  /* ---------- callout ---------- */
+
+  .spec-callout {
+    background: var(--bg-soft);
+    border-left: 4px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 0 0 20px;
+  }
+  .spec-callout p:last-child { margin-bottom: 0; }
+  .spec-callout--warn { border-left-color: var(--amber); background: var(--amber-bg); }
+  .spec-callout--stop { border-left-color: var(--red); background: var(--red-bg); }
+
+  /* ---------- compare grid ---------- */
+
+  .spec-compare {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin: 0 0 22px;
+  }
+
+  .spec-compare-item {
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 14px 16px;
+    background: var(--bg);
+  }
+  .spec-compare-item h4 { margin: 0 0 8px; font-size: 15px; }
+  .spec-compare-item p { margin: 0; font-size: 14.5px; color: var(--ink-soft); line-height: 1.6; }
+
+  .spec-compare-item--selected { border-color: #bcdfc9; background: var(--green-bg); }
+  .spec-compare-item--rejected { background: var(--bg-soft); }
+  .spec-compare-item--rejected h4 { color: var(--ink-soft); }
+
+  .spec-pill {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-bottom: 8px;
+  }
+  .spec-pill--yes { background: #cfe8da; color: var(--green); }
+  .spec-pill--no  { background: #e7e9ec; color: var(--ink-mute); }
+
+  /* ---------- tables ---------- */
+
+  .spec-table-wrap { overflow-x: auto; margin: 0 0 22px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14.5px;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--rule-soft);
+    vertical-align: top;
+  }
+
+  thead th {
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--rule);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    white-space: nowrap;
+  }
+
+  tbody tr:last-child td { border-bottom: 0; }
+
+  td code { white-space: normal; }
+
+  /* ---------- flow figures ---------- */
+
+  .spec-figure {
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 22px 20px 24px;
+    margin: 0 0 22px;
+  }
+
+  .spec-figure figcaption {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .flow {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-width: 420px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .flow-step { margin: 0; position: relative; }
+
+  /* connector: a line and a triangle, drawn in CSS so nothing is announced */
+  .flow-step + .flow-step { margin-top: 32px; }
+
+  .flow-step + .flow-step::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: -30px;
+    width: 2px;
+    height: 20px;
+    background: var(--flow-line);
+    transform: translateX(-50%);
+  }
+
+  .flow-step + .flow-step::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: -12px;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 8px solid var(--flow-line);
+    transform: translateX(-50%);
+  }
+
+  .flow-node {
+    display: block;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    background: var(--bg-soft);
+    padding: 11px 14px;
+    text-align: center;
+  }
+
+  .flow-node b {
+    display: block;
+    font-size: 14.5px;
+    font-weight: 650;
+    line-height: 1.4;
+  }
+
+  .flow-node em {
+    display: block;
+    font-style: normal;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--ink-mute);
+    margin-top: 3px;
+  }
+
+  /* the HTTP request and the HTTP response */
+  .flow-node--io {
+    background: #e9f0fb;
+    border-color: #c6d8f2;
+  }
+  .flow-node--io b { color: var(--accent); }
+
+  /* an external system: MongoDB, Kafka, Elasticsearch */
+  .flow-node--infra {
+    background: var(--bg);
+    border-style: dashed;
+    border-color: var(--flow-line);
+  }
+
+  /* the sidebar becomes a card above the content */
+  @media (max-width: 1080px) {
+    .spec-columns { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .spec-page { margin: 0 auto; }
+
+    .spec-toc {
+      order: -1;
+      position: static;
+      max-height: none;
+      overflow: visible;
+      width: 100%;
+      max-width: 760px;
+      margin: 40px auto 0;
+      padding: 18px 20px;
+      background: var(--bg-soft);
+      border: 1px solid var(--rule);
+      border-radius: 8px;
+    }
+
+    .spec-toc > nav > ul { columns: 2; column-gap: 28px; }
+    .spec-toc li { break-inside: avoid; }
+  }
+
+  @media (max-width: 620px) {
+    .spec-shell { padding: 48px 20px 96px; }
+    .spec-title { font-size: 30px; }
+    .spec-description { font-size: 16.5px; }
+    .spec-toc > nav > ul { columns: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="spec-shell">
+
+  <header class="spec-header">
+    <div class="spec-meta">August 14, 2026</div>
+    <h1 class="spec-title">Design — Message Management System</h1>
+    <p class="spec-description">
+      This design states how to build the three message endpoints, the Kafka pipeline that feeds
+      Elasticsearch, and the test suite. It applies the decisions in <code>docs/adr/</code> and
+      records the choices those decisions left open.
+    </p>
+    <div class="spec-status"><span class="spec-badge spec-badge--approved">Status: Approved</span></div>
+    <div class="spec-tags">
+      <span class="spec-tag">#message-management</span>
+      <span class="spec-tag">#ddd</span>
+      <span class="spec-tag">#nestjs</span>
+      <span class="spec-tag">#mongodb</span>
+      <span class="spec-tag">#kafka</span>
+      <span class="spec-tag">#elasticsearch</span>
+      <span class="spec-tag">#multi-tenancy</span>
+      <span class="spec-tag">#keyset-pagination</span>
+    </div>
+    <div class="spec-source">
+      <a href="2026-08-14-message-management-design.md">View source markdown ↗</a>
+      <span class="spec-source-meta">generated by <code>claude</code></span>
+    </div>
+  </header>
+
+  <div class="spec-columns">
+  <main class="spec-page">
+
+  <!-- ============ OVERVIEW ============ -->
+  <section class="spec-section" id="overview">
+    <h2>Overview</h2>
+
+    <p>
+      <code>CONTEXT.md</code> states what this system does. The decision records in
+      <code>docs/adr/</code> state the architecture. This document states how to build it.
+    </p>
+    <p>
+      The architecture decisions stay closed here. This design applies them. It also settles the
+      questions the decision records left open, and it records each answer beside the part of the
+      system that answer governs.
+    </p>
+
+    <div class="spec-callout">
+      <p>
+        <strong>The toolchain was tested first.</strong> A probe ran against <code>nub</code> 0.6.0
+        on Node 24.12 before anyone wrote code. The probe found two blockers. Both appear under
+        Key Decisions.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ KEY DECISIONS ============ -->
+  <section class="spec-section" id="key-decisions">
+    <h2>Key Decisions</h2>
+
+    <h3 id="kd-open-choices">Choices the decision records left open</h3>
+
+    <div class="spec-table-wrap">
+      <table>
+        <thead>
+          <tr><th>Question</th><th>Decision</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Search read path</td><td>Return the Elasticsearch hit directly. Do not hydrate from MongoDB</td></tr>
+          <tr><td>Sorting surface</td><td><code>sort=asc|desc</code> on <code>timestamp</code> only, both directions of the same keyset</td></tr>
+          <tr><td>Consumer process boundary</td><td>Same process as the API, started on bootstrap</td></tr>
+          <tr><td>Build strategy</td><td>Vertical slices, endpoint by endpoint, with the compose stack in slice 0</td></tr>
+          <tr><td>Skeleton</td><td>Hand-written. <strong>Do not run <code>nest new</code></strong> — amends ADR-0005</td></tr>
+          <tr><td>TypeScript version</td><td>Pinned to <code>^5.9</code>, not <code>^7</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="kd-review-choices">Choices settled in the review of 2026-08-14</h3>
+
+    <div class="spec-table-wrap">
+      <table>
+        <thead>
+          <tr><th>Question</th><th>Decision</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Decorator support</td><td><code>tsconfig.json</code> gains <code>experimentalDecorators</code> and <code>emitDecoratorMetadata</code>. Without them <code>nub</code> does not run Nest at all</td></tr>
+          <tr><td>Swagger CLI plugin</td><td>The plugin cannot run under <code>nub</code>. Write <code>@ApiProperty</code> by hand — amends ADR-0019</td></tr>
+          <tr><td>Store entry point</td><td>A global interceptor, not middleware and not the guard — amends ADR-0012</td></tr>
+          <tr><td>Read return type</td><td>Read ports return <code>MessageView</code>, not the entity (ADR-0020)</td></tr>
+          <tr><td>Cursor id conversion</td><td>The mapper owns it. The repository calls <code>toBinaryId</code></td></tr>
+          <tr><td>Elasticsearch <code>id</code> field</td><td>Read it from <code>hit._id</code>. The mapping is <code>dynamic: strict</code></td></tr>
+          <tr><td>Sanitization order</td><td>After <code>ValidationPipe</code>, in a pipe. Bounds apply to the raw value</td></tr>
+          <tr><td>Response shape</td><td>Both read endpoints return an envelope</td></tr>
+          <tr><td>Bad <code>limit</code></td><td>400, never a clamp</td></tr>
+          <tr><td><code>metadata</code> bound</td><td>4 KB serialized or less. The body cap is 256 KB</td></tr>
+          <tr><td>Publish budget</td><td>The API waits for the publish, but only for about 2 seconds. A broker outage cannot stall writes</td></tr>
+          <tr><td>Domain errors</td><td>400 for client faults, 500 for the rest. Cross-tenant reads return <code>200 { items: [] }</code></td></tr>
+          <tr><td>Halted indexer</td><td><code>/health</code> reports it as 503 degraded</td></tr>
+          <tr><td>Test isolation</td><td>Integration tests run one at a time, in their own Jest project, under a random consumer group id</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="kd-toolchain">Toolchain prerequisites</h3>
+
+    <div class="spec-callout spec-callout--stop">
+      <p>
+        <strong>Set the decorator flags before you write any Nest code.</strong> <code>nub</code>
+        refuses Stage 3 decorators, because the oxc transpiler does not support them. The current
+        <code>tsconfig.json</code> sets neither decorator flag, so NestJS does not start. Slice 0
+        adds both flags.
+      </p>
+    </div>
+
+<pre><code>"experimentalDecorators": true,   // legacy decorators — the shape Nest is written against
+"emitDecoratorMetadata": true,    // design:paramtypes — Nest DI reads this</code></pre>
+
+    <p>
+      The probe confirms two results when both flags are present. Decorators run, and the transpiler emits
+      <code>design:paramtypes</code>. ESM, <code>verbatimModuleSyntax</code> and
+      <code>allowImportingTsExtensions</code> all work beside them. Parameter types still resolve
+      across a <code>.ts</code> import, so the repository keeps its current compiler settings.
+    </p>
+
+    <p>
+      <strong>TypeScript stays at <code>^5.9</code>.</strong> Version <code>^7</code> is the native
+      <code>tsgo</code> compiler. Both <code>ts-jest</code> and <code>typescript-eslint</code> target
+      the 5.x compiler API. <code>nub</code> transpiles at run time, so TypeScript here serves only
+      the type check, the lint and <code>ts-jest</code>. Version 7 adds nothing, and it can break
+      three tools at once inside the timebox.
+    </p>
+
+    <p>
+      <strong>Write the skeleton by hand.</strong> <code>nest new</code> selects its own package
+      manager and writes npm-flavoured scripts, which ADR-0003 forbids. It also generates the flat
+      feature shape that ADR-0005 calls a trap. Slice 0 runs <code>nub add</code> for the Nest
+      packages instead, then creates <code>main.ts</code> and <code>app.module.ts</code> directly in
+      the four layers.
+    </p>
+
+    <h3 id="kd-tenant-context">Where the tenant context starts</h3>
+
+    <p>
+      ADR-0012 first placed this work in middleware. Middleware runs before the guard, so the token
+      is still unverified at that point. The guard cannot do the work either, because
+      <code>canActivate</code> returns a boolean and the store closes as soon as it returns.
+    </p>
+
+    <div class="spec-compare">
+      <div class="spec-compare-item spec-compare-item--selected">
+        <span class="spec-pill spec-pill--yes">Selected</span>
+        <h4>Global interceptor</h4>
+        <p>
+          It runs after the guard and it wraps the call. The pipes, the handler, the use case and the
+          repository all run inside the store.
+        </p>
+      </div>
+      <div class="spec-compare-item spec-compare-item--rejected">
+        <span class="spec-pill spec-pill--no">Rejected</span>
+        <h4>Middleware</h4>
+        <p>
+          It runs before the guard verifies the token, so it holds no trusted claim.
+        </p>
+      </div>
+      <div class="spec-compare-item spec-compare-item--rejected">
+        <span class="spec-pill spec-pill--no">Rejected</span>
+        <h4><code>als.enterWith()</code> in the guard</h4>
+        <p>
+          One line shorter. It binds the store to the rest of the async resource, not to a bounded
+          callback, so the store can leak across requests.
+        </p>
+      </div>
+    </div>
+
+    <h3 id="kd-read-ports">What the read ports return</h3>
+
+    <p>
+      <code>Message.create</code> generates the id and the timestamp, so it cannot rebuild a stored
+      message. A read path therefore needs a second construction route.
+    </p>
+
+    <div class="spec-compare">
+      <div class="spec-compare-item spec-compare-item--selected">
+        <span class="spec-pill spec-pill--yes">Selected</span>
+        <h4><code>MessageView</code> projection</h4>
+        <p>
+          The entity stays on the write path. Read ports return a plain immutable type. An
+          Elasticsearch hit is a derived value, so it must not claim the status of an entity.
+        </p>
+      </div>
+      <div class="spec-compare-item spec-compare-item--rejected">
+        <span class="spec-pill spec-pill--no">Rejected</span>
+        <h4><code>Message.restore()</code></h4>
+        <p>
+          One type instead of two. It adds a constructor that trusts its input and skips the one
+          invariant the entity exists to protect.
+        </p>
+      </div>
+    </div>
+
+    <h3 id="kd-sanitization">When sanitization runs</h3>
+
+    <p>
+      <code>ValidationPipe</code> calls <code>plainToInstance</code> before it validates. A
+      <code>@Transform</code> therefore runs ahead of every validator. That order causes two faults.
+    </p>
+
+    <ul>
+      <li>
+        <strong>The bounds would measure the sanitized text.</strong> <code>sanitize-html</code>
+        escapes text entities, so <code>&amp;</code> becomes <code>&amp;amp;</code> and
+        <code>&lt;</code> becomes <code>&amp;lt;</code>. A valid 4000-character message of ampersands
+        grows to about 20 000 characters. The API then rejects a length the client never sent.
+      </li>
+      <li>
+        <strong>The blank check in <code>Message.create</code> would never fire over HTTP.</strong>
+        The DTO always catches the case first, so the entity invariant becomes decorative.
+      </li>
+    </ul>
+
+    <div class="spec-compare">
+      <div class="spec-compare-item spec-compare-item--selected">
+        <span class="spec-pill spec-pill--yes">Selected</span>
+        <h4>Sanitize after validation</h4>
+        <p>
+          The DTO bounds the raw value. <code>SanitizeContentPipe</code> runs next. Content that
+          sanitizes away to nothing reaches <code>Message.create</code> and fails there.
+        </p>
+      </div>
+      <div class="spec-compare-item spec-compare-item--rejected">
+        <span class="spec-pill spec-pill--no">Rejected</span>
+        <h4><code>@Transform</code> in the DTO</h4>
+        <p>
+          One fewer moving part. It measures the wrong string and it hides the entity invariant.
+        </p>
+      </div>
+    </div>
+
+    <h3 id="kd-build-slices">Build slices</h3>
+
+    <p>
+      Build one vertical slice at a time, endpoint by endpoint. End every slice with
+      <code>nub run test</code> green, <code>nub run lint</code> green, and exactly one commit.
+    </p>
+
+    <div class="spec-table-wrap">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Slice</th><th>Done when</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>0</td>
+            <td>Skeleton — hand-written <code>main.ts</code> and <code>app.module.ts</code>, tsconfig decorator flags, TypeScript pinned to <code>^5.9</code>, two Jest projects, ESLint layering zones, environment validation, <code>docker-compose</code>, <code>@Public()</code> health route, Swagger</td>
+            <td>The app boots. Health responds. The lint zones fail on a deliberate bad import</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>Auth — JWT strategy, global guard, identity adapter and interceptor, <code>auth:keygen</code> script</td>
+            <td>Every auth rejection case is green</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Create to Mongo — entity, UUIDv7, mapper, repository, <code>createIndexes</code>, DTO, controller, exception filter</td>
+            <td>POST returns 201 and the document sits in Mongo with a Binary <code>_id</code></td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>List — cursor, keyset reader, <code>explain()</code> check</td>
+            <td>Paging across a boundary is stable. <code>explain()</code> shows <code>IXSCAN</code> with no <code>SORT</code></td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>Pipeline — publisher, topic admin, consumer, Elasticsearch mapping, indexer, indexer liveness on <code>/health</code></td>
+            <td>A posted message appears in the index. A replayed event changes nothing. A halted indexer turns <code>/health</code> to 503</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>Search endpoint</td>
+            <td>Search returns hits, empty results, and no cross-tenant documents</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td>README — setup, API contract, architecture decisions, <code>explain()</code> output, trade-offs</td>
+            <td>Every deferral in ADR-0017 and ADR-0011 is named with its reason</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      Slice 0 also carries <code>docker-compose.yml</code> and a connectivity smoke test. The riskiest
+      infrastructure surprises then appear early, although the code that uses Kafka and Elasticsearch
+      arrives in slice 4.
+    </p>
+  </section>
+
+  <!-- ============ ARCHITECTURE ============ -->
+  <section class="spec-section" id="architecture">
+    <h2>Architecture</h2>
+
+    <h3 id="arch-module-map">Module and layer map</h3>
+
+<pre><code>src/
+  main.ts                    ValidationPipe(whitelist, forbidNonWhitelisted, transform),
+                             exception filter, Swagger, enableShutdownHooks, listen
+  app.module.ts              module wiring + APP_GUARD (global JwtAuthGuard)
+
+  domain/                    imports nothing from the other three layers
+    message.ts               entity — private ctor, static create(), immutable
+                             WRITE PATH ONLY (ADR-0020)
+    message-view.ts          read projection — plain immutable type, no behaviour
+    message-created.event.ts event payload
+    cursor.ts                (timestamp, id, direction) — encode/decode, rejects malformed
+    page.ts                  Page&lt;T&gt; { items, nextCursor }
+    errors.ts                DomainError + typed subclasses
+    uuid-v7.ts               v7 generator (node:crypto randomBytes; NOT randomUUID)
+    ports/
+      message-writer.port.ts       save(message: Message)
+      message-reader.port.ts       listByConversation(...) : Page&lt;MessageView&gt;
+      message-searcher.port.ts     search(...) : MessageView[]
+      message-indexer.port.ts      index(message)
+      event-publisher.port.ts      publish(event)
+      identity-context.port.ts     require() : { tenantId, senderId }
+
+  application/               @Injectable() lives here and nowhere below
+    create-message.usecase.ts
+    list-conversation-messages.usecase.ts
+    search-conversation-messages.usecase.ts
+    index-message.usecase.ts          driven by the consumer, not by HTTP
+
+  infrastructure/            implements the ports
+    config/         env.config.ts (class-validator), config.module.ts
+    identity/       als-identity-context.ts        AsyncLocalStorage adapter
+                    identity.interceptor.ts        APP_INTERCEPTOR — enters the store
+    mongo/          client provider, message.mapper.ts (_id &lt;-&gt; id, the ONLY place),
+                    mongo-message.repository.ts (writer + reader), create-indexes.ts
+    kafka/          kafka.client.ts, kafka-event-publisher.ts,
+                    message-created.consumer.ts (onModuleInit / onModuleDestroy)
+    elasticsearch/  client, message-index.mapping.ts, es-message-index.ts (indexer + searcher)
+    auth/           jwt.strategy.ts, jwt-auth.guard.ts, public.decorator.ts
+
+  interfaces/http/
+    messages.controller.ts               POST /api/messages
+    conversation-messages.controller.ts  GET list + GET search
+    health.controller.ts                 the only @Public() route
+    dto/                                 create, list-query, search-query, message-response
+    sanitize-content.pipe.ts             runs after ValidationPipe
+    domain-exception.filter.ts           DomainError -&gt; HTTP status</code></pre>
+
+    <p>
+      The top level orders by layer, per ADR-0005. Slice 0 configures the ESLint
+      <code>import/no-restricted-paths</code> zones from that decision record. Those zones must pass
+      before every commit.
+    </p>
+
+    <h3 id="arch-ports">Six single-method ports, not one repository</h3>
+
+    <p>
+      This takes interface segregation literally, per ADR-0006. <code>IndexMessage</code> receives
+      <code>MessageIndexer</code>, so it cannot reach <code>save</code> at all.
+      <code>MongoMessageRepository</code> implements the writer and the reader in one class, because
+      both share the collection handle and the mapper. No other implementation is shared.
+    </p>
+
+    <h3 id="arch-identity-context"><code>IdentityContext</code></h3>
+
+    <p>
+      ADR-0012 shows <code>tenantContext.require()</code>. The create use case also needs
+      <code>senderId</code>, and ADR-0018 forbids the controller to pass identity into the use case.
+      The port therefore carries both claims and takes the name <code>IdentityContext</code>.
+    </p>
+
+<pre><code>// domain/ports/identity-context.port.ts
+export interface IdentityContext {
+  require(): { tenantId: string; senderId: string };   // throws when absent
+}</code></pre>
+
+    <p>
+      One adapter implements the port. The use cases and the Mongo repository both use that adapter.
+      The rule does not change: an absent context throws, and it is never a wildcard. ADR-0012 carries
+      a dated amendment for the new name.
+    </p>
+
+    <h3 id="arch-interceptor">The interceptor enters the store</h3>
+
+    <p>
+      A global <code>APP_INTERCEPTOR</code> is the only place that runs after verification and also
+      wraps the call. It reads <code>request.user</code>, which the passport strategy sets, and it
+      wraps <code>next.handle()</code>.
+    </p>
+
+<pre><code>// infrastructure/identity/identity.interceptor.ts
+intercept(ctx: ExecutionContext, next: CallHandler) {
+  const { user } = ctx.switchToHttp().getRequest();
+  return new Observable((sub) =&gt;
+    als.run({ tenantId: user.tenantId, senderId: user.senderId },
+      () =&gt; next.handle().subscribe(sub)));
+}</code></pre>
+
+    <p>
+      The <code>@Public()</code> health route carries no <code>user</code>, so the interceptor enters
+      no store. Any later call to <code>require()</code> then throws. That is the intended
+      fail-closed behaviour.
+    </p>
+
+    <h3 id="arch-event-pipeline">The event pipeline</h3>
+
+    <figure class="spec-figure">
+      <figcaption>Figure 1 — the path of one message-created event</figcaption>
+      <ol class="flow">
+        <li class="flow-step">
+          <span class="flow-node"><b>CreateMessage</b></span>
+        </li>
+        <li class="flow-step">
+          <span class="flow-node"><b>KafkaEventPublisher</b><em>idempotent, acks all</em></span>
+        </li>
+        <li class="flow-step">
+          <span class="flow-node flow-node--infra"><b>Kafka topic message-created</b><em>3 partitions · key tenantId:conversationId</em></span>
+        </li>
+        <li class="flow-step">
+          <span class="flow-node"><b>MessageCreatedConsumer</b><em>group search-indexer</em></span>
+        </li>
+        <li class="flow-step">
+          <span class="flow-node"><b>IndexMessage</b></span>
+        </li>
+        <li class="flow-step">
+          <span class="flow-node flow-node--infra"><b>Elasticsearch</b><em>document id = message id</em></span>
+        </li>
+      </ol>
+    </figure>
+
+    <ul>
+      <li>
+        <strong>The application creates the topic at startup</strong> through the kafkajs admin
+        client. Kafka auto-creation yields a single partition, which silently destroys the
+        partitioning design. The application asserts the topology instead of inheriting a broker
+        default.
+      </li>
+      <li>
+        <strong>The producer sets <code>idempotent: true</code> and <code>acks: all</code>.</strong>
+        That one flag removes duplicates from producer retries. The consumer-side rule in ADR-0011
+        still applies, because it covers redelivery and not only retries.
+      </li>
+      <li>
+        <strong>Offsets commit only after the index call resolves.</strong> kafkajs commits after
+        <code>eachMessage</code> returns. A throw means no commit and a redelivery, and the upsert by
+        <code>id</code> makes that redelivery harmless. No manual commit code is needed. Never catch
+        an error and continue inside the handler, because that commits past a failure.
+      </li>
+      <li><strong>The consumer reads the tenant from the payload</strong>, never from the store.</li>
+      <li>
+        The consumer starts on <code>onModuleInit</code> and stops on <code>onModuleDestroy</code>.
+        <code>enableShutdownHooks()</code> lets SIGTERM leave the consumer group cleanly, instead of
+        a wait for the session timeout.
+      </li>
+      <li>
+        The topic name, the partition count and the group id live in configuration, not in string
+        literals (ADR-0010).
+      </li>
+    </ul>
+
+    <div class="spec-callout">
+      <p>
+        <strong>The event carries the whole message.</strong> The payload holds the full message, not
+        only the id. The consumer then indexes without a read back from MongoDB. That removes the
+        read-your-write race against the primary. It also means the consumer needs no tenant context
+        of its own, which matters because it runs outside the request and has no ambient tenant
+        (ADR-0012).
+      </p>
+    </div>
+
+    <div class="spec-callout spec-callout--warn">
+      <p>
+        <strong>No dead-letter queue.</strong> When the retries run out, the consumer stops. It does
+        not skip the message. A poison message that halts the indexer is a visible failure. A skipped
+        message is silent data loss in a derived index.
+      </p>
+    </div>
+
+    <p>
+      <strong>The system must make that failure visible.</strong> One process holds both the API and
+      the indexer. A halted consumer would otherwise leave the API at 201 while search quietly stops.
+      The consumer records its own liveness, and the health route reports it.
+    </p>
+
+<pre><code>GET /health -&gt; 200 { status: 'ok',       indexer: 'running' }
+            -&gt; 503 { status: 'degraded', indexer: 'stopped',
+                     reason: 'consumer crashed' }</code></pre>
+
+<pre><code>this.consumer.on('consumer.crash', (e) =&gt; {
+  this.state = 'stopped';
+  this.logger.error('indexer halted', e);
+});</code></pre>
+
+    <p>
+      This check is hand-written. <code>@nestjs/terminus</code> is an official Nest package, but it
+      would be a dependency for one boolean. The check also gives the <code>@Public()</code> health
+      route a purpose beyond "the process is up".
+    </p>
+
+    <h3 id="arch-one-process">One process, not two</h3>
+
+    <p>
+      The consumer starts inside the API process on bootstrap. One command runs the system, and one
+      command demonstrates it. Integration tests then exercise the whole pipeline in a single Nest
+      testing module. The cost is that the API and the indexer cannot scale apart, and the README
+      names that cost. The consumer group already exists, so a split entry point is later a bootstrap
+      change and not a redesign.
+    </p>
+  </section>
+
+  <!-- ============ DATA MODEL ============ -->
+  <section class="spec-section" id="data-model">
+    <h2>Data Model</h2>
+
+    <h3 id="dm-bounds">Field bounds</h3>
+
+    <div class="spec-table-wrap">
+      <table>
+        <thead>
+          <tr><th>Field</th><th>Bound</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>content</code></td><td>Non-blank, 4000 characters or fewer, measured on the <strong>raw</strong> value</td></tr>
+          <tr><td><code>conversationId</code></td><td>Non-blank, 128 characters or fewer</td></tr>
+          <tr><td><code>metadata</code></td><td>Optional object, 4 KB serialized or less</td></tr>
+          <tr><td>request body</td><td>256 KB JSON or less</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      Oversized content is a required edge case under ADR-0014, so the limit is a stated number and
+      not an implicit one. The same reason gives <code>metadata</code> a number of its own. MongoDB
+      stores <code>metadata</code> verbatim, and the Elasticsearch <code>_source</code> keeps it too,
+      because <code>enabled: false</code> indexes nothing but stores everything. An unbounded object
+      therefore costs twice.
+    </p>
+
+    <p>
+      The type stays <code>Record&lt;string, any&gt;</code>. <code>CONTEXT.md</code> declares that type
+      verbatim in the data model. A narrower type of primitives only would depart from the given
+      contract rather than harden it.
+    </p>
+
+<pre><code>@IsOptional() @IsObject() @MaxJsonBytes(4096)
+metadata?: Record&lt;string, any&gt;;</code></pre>
+
+    <h3 id="dm-content-checks">Two checks on content, and both fire</h3>
+
+    <p>
+      <code>sanitize-html</code> can reduce <code>&lt;script&gt;alert(1)&lt;/script&gt;</code> to an
+      empty string. Sanitization therefore creates the blank case. It does not only pass one through.
+      The two checks catch different inputs, and the pipe order makes each one reachable.
+    </p>
+
+    <div class="spec-table-wrap">
+      <table>
+        <thead>
+          <tr><th>Input</th><th>Rejected by</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>""</code>, <code>"   "</code></td><td>The DTO — <code>@IsNotEmpty()</code> on the raw value</td></tr>
+          <tr><td><code>"&lt;script&gt;alert(1)&lt;/script&gt;"</code></td><td><code>Message.create</code> — blank <em>after</em> sanitization</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      The second check is the one genuine invariant of the entity under ADR-0016. It is not
+      redundancy. Both checks get a test, and the integration suite asserts that the script case
+      returns 400 rather than an empty stored message.
+    </p>
+
+    <h3 id="dm-identity-clock">Identity and the clock</h3>
+
+    <p>
+      The domain generates <code>id</code> before persistence, per ADR-0008. The same id then keys
+      both stores. <code>timestamp</code> is server-assigned and is not a request field.
+    </p>
+
+    <p>
+      <strong>One clock read serves two uses.</strong> <code>Message.create</code> reads
+      <code>Date.now()</code> once. It derives the v7 id and the timestamp from that single value, so
+      the millisecond inside the id always matches the exposed timestamp. ADR-0013 rests on exactly
+      that agreement when it calls the tiebreaker meaningful.
+    </p>
+
+<pre><code>static create(props: CreateProps): Message {
+  const now = Date.now();
+  return new Message(uuidV7(now), new Date(now), /* … */);
+}</code></pre>
+
+    <p>
+      There is no <code>Clock</code> port. Such a port protects no invariant, which ADR-0016 forbids.
+      Tests get determinism from Jest fake timers.
+    </p>
+
+    <h3 id="dm-index-cursor">The MongoDB index and the cursor</h3>
+
+    <ul>
+      <li>
+        <strong>Read <code>limit + 1</code> rows, and run no count query.</strong> The extra row shows
+        whether a next page exists, and it supplies the cursor for that page. A
+        <code>countDocuments</code> beside every page would scan the whole conversation to answer what
+        one extra row answers for free.
+      </li>
+      <li>
+        <strong>The cursor encodes its own direction.</strong> ADR-0013 records that a sort change
+        invalidates an outstanding cursor. The cursor therefore carries enough to detect the change.
+        A <code>desc</code> cursor with <code>sort=asc</code> returns 400, not a wrong page.
+      </li>
+      <li>
+        <strong>The mapper converts the id in the cursor, not the repository.</strong> The keyset
+        bound needs a BSON <code>UUID</code> built from the canonical string in the cursor. That
+        conversion in the repository would be a second translation site and would break the
+        single-place rule of ADR-0008. The mapper exports <code>toBinaryId</code> and
+        <code>toStringId</code>, and the repository calls them. The repository still names
+        <code>_id</code> in the filter and the sort, which is unavoidable, but it never knows the
+        representation.
+      </li>
+      <li>
+        <strong>The tiebreaker works because Binary sorts the way v7 sorts.</strong> MongoDB orders
+        <code>BinData</code> by length, then by subtype, then byte by byte. Every message
+        <code>_id</code> is 16 bytes of subtype 4, so the comparison is byte-wise. A UUIDv7 leads with
+        a 48-bit timestamp in big-endian order, so byte order is time order. That order matches the
+        canonical string order the cursor carries. This fact is load-bearing, so it gets a test that
+        inserts ids generated in the same millisecond and asserts a stable total order.
+      </li>
+      <li>
+        <strong>One index serves both directions:</strong>
+        <code>(tenantId: 1, conversationId: 1, timestamp: -1, _id: -1)</code>. MongoDB walks an index
+        backwards at the same cost, so <code>asc</code> needs no second index. <code>_id</code> sits
+        fourth, so the tiebreaker sorts inside the index and not in memory.
+      </li>
+    </ul>
+
+    <h3 id="dm-es-mapping">The Elasticsearch mapping</h3>
+
+<pre><code>{
+  "dynamic": "strict",
+  "properties": {
+    "tenantId":       { "type": "keyword" },
+    "conversationId": { "type": "keyword" },
+    "senderId":       { "type": "keyword" },
+    "timestamp":      { "type": "date" },
+    "content":        { "type": "text", "analyzer": "standard" },
+    "metadata":       { "type": "object", "enabled": false }
+  }
+}</code></pre>
+
+    <div class="spec-callout">
+      <p>
+        <strong>The mapping holds no <code>id</code> field, and that is deliberate.</strong> ADR-0011
+        already makes the document id the message id. A copy in <code>_source</code> would be a second
+        value that nothing keeps in step. The adapter builds the view from both halves of the hit.
+      </p>
+    </div>
+
+<pre><code>hits.map((h) =&gt; ({ id: h._id, ...h._source }))   // -&gt; MessageView (ADR-0020)</code></pre>
+
+    <p>
+      <strong><code>dynamic: strict</code></strong> turns an unexpected top-level field into a hard
+      error, instead of a quiet addition to the mapping. That is the same failure that
+      <code>enabled: false</code> prevents for <code>metadata</code>, now closed at the root as well.
+      Strictness does not reach inside <code>metadata</code>, because <code>enabled: false</code>
+      means Elasticsearch never parses the content.
+    </p>
+
+    <p>
+      <code>metadata</code> is <code>Record&lt;string, any&gt;</code> with client-controlled keys.
+      Dynamic mapping would let one tenant grow the cluster-state mapping with varied keys, until
+      the index becomes unusable. <code>enabled: false</code> keeps the object in
+      <code>_source</code>, so results still carry it, and indexes none of it. This is the concrete
+      reason the spec asks for explicit mappings, and it belongs in the README.
+    </p>
+
+    <p>
+      The analyzer is <code>standard</code>, not <code>english</code>. Stemming helps English recall
+      and quietly damages every other language, and this corpus is general chat.
+    </p>
+
+    <p>
+      One index holds all tenants, and a filter scopes each query. There is no index per tenant. That
+      trade-off belongs to ADR-0012. The application creates the index with the mapping at startup if
+      the index is absent.
+    </p>
+  </section>
+
+  <!-- ============ API DESIGN ============ -->
+  <section class="spec-section" id="api-design">
+    <h2>API Design</h2>
+
+    <h3 id="api-create-path">The create path</h3>
+
+    <figure class="spec-figure">
+      <figcaption>Figure 2 — the create path, from request to response</figcaption>
+      <ol class="flow">
+        <li class="flow-step">
+          <span class="flow-node flow-node--io"><b>POST /api/messages</b></span>
+        </li>
+        <li class="flow-step">
+          <span class="flow-node"><b>JwtAuthGuard</b><em>verify ES256, iss, aud, exp · reject when tid or sub is absent</em></span>
+        </li>
+        <li class="flow-step">
+          <span class="flow-node"><b>IdentityInterceptor</b><em>als.run tenantId + senderId</em></span>
+        </li>
+        <li class="flow-step">
+          <span class="flow-node"><b>ValidationPipe</b><em>CreateMessageDto</em></span>
+        </li>
+        <li class="flow-step">
+          <span class="flow-node"><b>SanitizeContentPipe</b><em>sanitize-html</em></span>
+        </li>
+        <li class="flow-step">
+          <span class="flow-node"><b>CreateMessage.execute</b></span>
+        </li>
+        <li class="flow-step">
+          <span class="flow-node"><b>Message.create</b><em>UUIDv7 + timestamp</em></span>
+        </li>
+        <li class="flow-step">
+          <span class="flow-node flow-node--infra"><b>MongoDB</b><em>writer.save</em></span>
+        </li>
+        <li class="flow-step">
+          <span class="flow-node flow-node--infra"><b>Kafka</b><em>publisher.publish</em></span>
+        </li>
+        <li class="flow-step">
+          <span class="flow-node flow-node--io"><b>201 Created</b></span>
+        </li>
+      </ol>
+    </figure>
+
+    <p>
+      The guard verifies ES256 with the algorithm pinned, and it checks <code>iss</code>,
+      <code>aud</code> and <code>exp</code>. It rejects a token that lacks <code>tid</code> or
+      <code>sub</code>. The DTO accepts <code>conversationId</code>, <code>content</code> and an
+      optional <code>metadata</code>. A body that carries <code>senderId</code> returns 400. The API
+      never ignores that field in silence.
+    </p>
+
+<pre><code>201 { id, conversationId, senderId, content, timestamp, metadata }</code></pre>
+
+    <p>
+      The pipes register in this order, and the order is the point.
+    </p>
+
+<pre><code>// main.ts
+app.use(json({ limit: '256kb' }));          // sanitize-html never parses a megabyte
+app.useGlobalPipes(new ValidationPipe({ whitelist: true,
+  forbidNonWhitelisted: true, transform: true }));
+app.useGlobalPipes(new SanitizeContentPipe());</code></pre>
+
+    <h3 id="api-publish-failure">A failed publish still returns 201</h3>
+
+    <p>
+      The message sits in the system of record, so the request succeeded. A failure response would
+      invite a client retry, and that retry writes a second message under a new id. The service logs
+      the failure at error level and never swallows it, per ADR-0011. The cost is that the message
+      stays absent from search until a backfill. ADR-0011 already accepts that gap, and the README
+      names it beside the note on the transactional outbox.
+    </p>
+
+    <div class="spec-callout spec-callout--warn">
+      <p>
+        <strong>Bound the wait explicitly.</strong> kafkajs defaults to five retries with exponential
+        backoff and a 30-second send timeout. Every POST would then take about thirty seconds and
+        return 201 while the broker is down. That is the worst of both outcomes.
+      </p>
+    </div>
+
+<pre><code>kafka.producer({
+  idempotent: true,                                 // implies acks:-1, maxInFlight:1
+  retry: { retries: 2, initialRetryTime: 100 },
+});
+await producer.send({ topic, timeout: 2000, messages: [...] });</code></pre>
+
+    <p>
+      The API still waits for the send, so the save precedes the publish. The unit test that asserts
+      that order stays meaningful.
+    </p>
+
+    <h3 id="api-list">List a conversation</h3>
+
+<pre><code>GET /api/conversations/:conversationId/messages?limit=&amp;sort=&amp;cursor=
+
+limit   default 20, 1..100           sort  asc | desc (default desc)
+cursor  base64url of (timestamp, id, direction) — opaque, parsed defensively
+
+Mongo:  { tenantId, conversationId, $or: [ keyset ] }
+        .sort({ timestamp: dir, _id: dir }).limit(limit + 1)
+-&gt; 200  { items: [...], nextCursor: string | null }</code></pre>
+
+    <div class="spec-callout">
+      <p>
+        <strong>An out-of-range or unparseable <code>limit</code> returns 400, never a clamp.</strong>
+        ADR-0013 says reject, not repair. A client that asks for 500 and silently receives 100 gets
+        wrong information. This matches <code>forbidNonWhitelisted</code>, which already treats an unexpected
+        field as an error rather than something to drop quietly.
+      </p>
+    </div>
+
+    <h3 id="api-search">Search a conversation</h3>
+
+<pre><code>GET /api/conversations/:conversationId/messages/search?q=&amp;limit=
+
+ES:  bool {
+       must:   [ { match: { content: q } } ],        scored
+       filter: [ { term: { tenantId } },             filter context — unscored, cacheable
+                 { term: { conversationId } } ]
+     }
+-&gt; 200  { items: [...] }        relevance order</code></pre>
+
+    <p>
+      <strong>Both read endpoints return an envelope.</strong> Two endpoints over one resource must
+      not return different container shapes. The envelope also leaves room for
+      <code>search_after</code> later as an additive change instead of a breaking one. An empty result
+      is <code>200 { items: [] }</code>, and that case is a required edge case.
+    </p>
+
+    <p>
+      The query uses <code>match</code> against a DSL object. Never use <code>query_string</code>, and
+      never concatenate strings, per ADR-0015. The API validates <code>q</code> as non-blank and 256
+      characters or fewer.
+    </p>
+
+    <p>
+      <strong>The endpoint returns the hit directly</strong> and does not hydrate from MongoDB, so
+      search costs one round trip. Elasticsearch stays a derived read model under ADR-0009. The system
+      reads it for search and nothing else, and MongoDB can rebuild it. The trade-off is that a
+      lagging index serves slightly stale content. That is acceptable for a search result, and the
+      README names it.
+    </p>
+
+    <p>
+      <strong>Search has no pagination.</strong> It accepts <code>limit</code> only, capped at 100.
+      The spec asks for pagination on the listing endpoint, not on search. Deep relevance paging needs
+      <code>search_after</code>, and the README names that instead of a half-built version.
+    </p>
+
+    <h3 id="api-errors">Domain errors map to two statuses</h3>
+
+    <div class="spec-table-wrap">
+      <table>
+        <thead>
+          <tr><th>Error</th><th>Status</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>BlankContentError</code></td><td>400</td><td>Sanitization removed all content</td></tr>
+          <tr><td><code>InvalidCursorError</code></td><td>400</td><td>Malformed base64 or malformed shape</td></tr>
+          <tr><td><code>CursorDirectionError</code></td><td>400</td><td>A <code>desc</code> cursor arrived with <code>sort=asc</code></td></tr>
+          <tr><td><code>MissingIdentityError</code></td><td>500</td><td>Unreachable over HTTP, because the guard guarantees the context</td></tr>
+          <tr><td>anything else</td><td>500</td><td>Logged. The service does not echo the message to the client</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      Input faults return the same 400 the DTO returns. A client then sees one status for one class of
+      problem, whichever layer caught it. An absent identity context is deliberately not a 401. The
+      guard already ran, so this case means a bug in our wiring. A 401 would send the caller to check
+      a token that was correct.
+    </p>
+
+    <h3 id="api-cross-tenant">A cross-tenant read is empty, not 404</h3>
+
+    <p>
+      Tenant scope is part of the query under ADR-0012. Another tenant's conversation therefore does
+      not exist from this caller's view.
+    </p>
+
+<pre><code>GET /api/conversations/abc/messages     token: tenant B, conversation abc: tenant A
+200 { "items": [], "nextCursor": null }  — identical to a conversationId that never existed</code></pre>
+
+    <p>
+      Nothing is special-cased and nothing leaks. A 404 would need an existence check that the design
+      has no other reason to run. It would also confirm that some tenant owns that
+      <code>conversationId</code>. That is a cross-tenant existence oracle, and tenant isolation
+      exists to withhold exactly that.
+    </p>
+  </section>
+
+  <!-- ============ TESTING ============ -->
+  <section class="spec-section" id="testing-strategy">
+    <h2>Testing Strategy</h2>
+
+    <p>
+      Follow TDD throughout, per ADR-0014. Write the failing test first. Confirm that it fails. Then
+      write the minimum code that makes it pass.
+    </p>
+
+    <h3 id="test-unit">Unit tests — no infrastructure, every port faked</h3>
+
+    <ul>
+      <li><code>Message.create</code> invariants — blank content, and content that the sanitize pipe reduced to nothing before it arrived</li>
+      <li><code>Message.create</code> clock coherence — the millisecond inside the id equals <code>timestamp</code>, with Jest fake timers</li>
+      <li><code>Cursor</code> round trip, malformed input, direction mismatch</li>
+      <li><code>CreateMessage</code> — the save precedes the publish, and a rejected publish still returns the message</li>
+      <li><code>ListMessages</code> — the extra row becomes <code>nextCursor</code> and never appears as an item</li>
+      <li><code>SearchMessages</code></li>
+      <li><code>IndexMessage</code></li>
+    </ul>
+
+    <p>
+      Every fake honours the same contract as the real adapter. It throws the same errors, keeps the
+      same order, and adds no stricter precondition. ADR-0006 requires this under the Liskov rule.
+    </p>
+
+    <h3 id="test-integration">Integration tests — compose stack, Nest testing module, supertest</h3>
+
+    <div class="spec-table-wrap">
+      <table>
+        <thead>
+          <tr><th>Area</th><th>Cases</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Auth</td>
+            <td>absent, malformed and expired token; token without <code>tid</code>; token without <code>sub</code>; <code>senderId</code> in the body returns 400</td>
+          </tr>
+          <tr>
+            <td>Create</td>
+            <td>201 shape; blank and whitespace <code>content</code> returns 400 from the DTO; script-only content returns 400 from <code>Message.create</code> after sanitization; oversized <code>content</code>; oversized <code>metadata</code>; markup content stored sanitized</td>
+          </tr>
+          <tr>
+            <td>List</td>
+            <td>order; paging across a page boundary; <code>limit=0</code>, <code>limit=101</code> and <code>limit=abc</code> return 400; malformed cursor returns 400; a <code>desc</code> cursor with <code>sort=asc</code> returns 400; <code>sort=asc</code> and <code>sort=desc</code>; tenant B gets <code>200 { items: [] }</code> for tenant A's conversation</td>
+          </tr>
+          <tr>
+            <td>Index</td>
+            <td><code>explain()</code> gives <code>IXSCAN</code> with no <code>SORT</code>; ids generated in the same millisecond keep a stable total order</td>
+          </tr>
+          <tr>
+            <td>Search</td>
+            <td>a hit appears after the refresh; an empty result returns <code>200 { items: [] }</code>; cross-tenant documents stay filtered out</td>
+          </tr>
+          <tr>
+            <td>Consumer</td>
+            <td>the same event consumed twice yields one document with identical state</td>
+          </tr>
+          <tr>
+            <td>Health</td>
+            <td><code>200 ok</code> while the indexer runs; <code>503 degraded</code> after it stops</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="test-explain">Assert the query plan</h3>
+
+    <p>
+      An integration test checks that the winning plan is an <code>IXSCAN</code> with no
+      <code>SORT</code> stage. A later change to the index or the sort then fails the build instead of
+      a quiet slowdown. A <code>nub run db:explain</code> script prints the same plan for the README.
+    </p>
+
+<pre><code>const plan = await collection.find(keysetFilter)
+  .sort({ timestamp: -1, _id: -1 }).explain('queryPlanner');
+expect(stages(plan)).toContain('IXSCAN');
+expect(stages(plan)).not.toContain('SORT');</code></pre>
+
+    <h3 id="test-mechanics">Three mechanics to fix now</h3>
+
+    <ol>
+      <li>
+        <strong>Jest global setup generates the test keypair.</strong> Never commit it, not even as a
+        fixture (ADR-0018).
+      </li>
+      <li>
+        <strong>Each integration run uses a fresh random <code>tenantId</code>.</strong> About three
+        lines then remove the limitation in ADR-0014 about compose state that persists between runs.
+      </li>
+      <li>
+        <strong>Integration tests run one at a time, in their own Jest project, under a random id for
+        the consumer group.</strong> Jest runs test files in parallel workers by default, and slice 4
+        puts a Kafka consumer inside the app. Every integration file would then start another consumer
+        in the same group, which rebalances mid-test and moves partitions between workers.
+        <code>maxWorkers: 1</code> keeps one consumer alive at a time. The random group id keeps the
+        committed offsets of a previous run out of this one. Unit tests stay parallel and free of
+        infrastructure.
+      </li>
+    </ol>
+
+<pre><code>// jest.config
+projects: [
+  { displayName: 'unit',        testMatch: ['**/*.spec.ts'] },
+  { displayName: 'integration', testMatch: ['**/*.int-spec.ts'],
+    maxWorkers: 1, globalSetup: './test/setup.ts' },   // keypair + run ids
+]</code></pre>
+
+    <p>
+      One command still runs both projects: <code>nub run test</code>.
+    </p>
+
+    <div class="spec-callout spec-callout--warn">
+      <p>
+        <strong>Never assert a search result straight after the POST.</strong> Search assertions poll
+        until the document appears or the timeout expires. Never use a bare sleep (ADR-0009).
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ OUT OF SCOPE ============ -->
+  <section class="spec-section" id="out-of-scope-mvp">
+    <h2>Out of Scope (MVP)</h2>
+
+    <p>
+      ADR-0017 sets this list, and this design confirms it. The build includes none of the following.
+    </p>
+
+    <ul>
+      <li>Caching</li>
+      <li>Rate limiting</li>
+      <li>A refresh-token flow</li>
+      <li>A users collection</li>
+      <li>Roles</li>
+      <li>A dead-letter queue</li>
+      <li>A transactional outbox</li>
+      <li>Deep paging with <code>search_after</code></li>
+    </ul>
+
+    <p>
+      The README names each item with its reason. Where ADR-0017 ranks an item, the README states the
+      rank.
+    </p>
+  </section>
+
+  </main>
+
+  <aside class="spec-toc" aria-labelledby="spec-toc-title">
+    <nav>
+      <p class="spec-toc-title" id="spec-toc-title">On this page</p>
+      <ul>
+        <li><a href="#overview">Overview</a></li>
+
+        <li>
+          <a href="#key-decisions">Key Decisions</a>
+          <ul>
+            <li><a href="#kd-open-choices">Choices the decision records left open</a></li>
+            <li><a href="#kd-review-choices">Choices settled in the review of 2026-08-14</a></li>
+            <li><a href="#kd-toolchain">Toolchain prerequisites</a></li>
+            <li><a href="#kd-tenant-context">Where the tenant context starts</a></li>
+            <li><a href="#kd-read-ports">What the read ports return</a></li>
+            <li><a href="#kd-sanitization">When sanitization runs</a></li>
+            <li><a href="#kd-build-slices">Build slices</a></li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="#architecture">Architecture</a>
+          <ul>
+            <li><a href="#arch-module-map">Module and layer map</a></li>
+            <li><a href="#arch-ports">Six single-method ports</a></li>
+            <li><a href="#arch-identity-context">IdentityContext</a></li>
+            <li><a href="#arch-interceptor">The interceptor enters the store</a></li>
+            <li><a href="#arch-event-pipeline">The event pipeline</a></li>
+            <li><a href="#arch-one-process">One process, not two</a></li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="#data-model">Data Model</a>
+          <ul>
+            <li><a href="#dm-bounds">Field bounds</a></li>
+            <li><a href="#dm-content-checks">Two checks on content</a></li>
+            <li><a href="#dm-identity-clock">Identity and the clock</a></li>
+            <li><a href="#dm-index-cursor">The MongoDB index and the cursor</a></li>
+            <li><a href="#dm-es-mapping">The Elasticsearch mapping</a></li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="#api-design">API Design</a>
+          <ul>
+            <li><a href="#api-create-path">The create path</a></li>
+            <li><a href="#api-publish-failure">A failed publish still returns 201</a></li>
+            <li><a href="#api-list">List a conversation</a></li>
+            <li><a href="#api-search">Search a conversation</a></li>
+            <li><a href="#api-errors">Domain errors map to two statuses</a></li>
+            <li><a href="#api-cross-tenant">A cross-tenant read is empty</a></li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="#testing-strategy">Testing Strategy</a>
+          <ul>
+            <li><a href="#test-unit">Unit tests</a></li>
+            <li><a href="#test-integration">Integration tests</a></li>
+            <li><a href="#test-explain">Assert the query plan</a></li>
+            <li><a href="#test-mechanics">Three mechanics to fix now</a></li>
+          </ul>
+        </li>
+
+        <li><a href="#out-of-scope-mvp">Out of Scope (MVP)</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  var tocLinks = Array.prototype.slice.call(document.querySelectorAll('.spec-toc a[href^="#"]'));
+  var targets = tocLinks
+    .map(function (a) {
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      return el ? { link: a, el: el } : null;
+    })
+    .filter(Boolean);
+
+  if (!targets.length) return;
+
+  var current = null;
+  var ticking = false;
+  var activationLine = 120;
+
+  function topLinkFor(link) {
+    var li = link.closest('li');
+    var maybeTopLi = li.parentElement.parentElement;
+    return maybeTopLi && maybeTopLi.tagName === 'LI' ? maybeTopLi.querySelector('a') : null;
+  }
+
+  function setActive(link) {
+    if (current === link) return;
+    tocLinks.forEach(function (a) { a.classList.remove('is-active'); });
+    link.classList.add('is-active');
+    var topLink = topLinkFor(link);
+    if (topLink) topLink.classList.add('is-active');
+    current = link;
+  }
+
+  function update() {
+    ticking = false;
+    var active = targets[0];
+    for (var i = 0; i < targets.length; i++) {
+      if (targets[i].el.getBoundingClientRect().top - activationLine <= 0) {
+        active = targets[i];
+      } else {
+        break;
+      }
+    }
+    setActive(active.link);
+  }
+
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    window.requestAnimationFrame(update);
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+  update();
+})();
+</script>
+</body>
+</html>
