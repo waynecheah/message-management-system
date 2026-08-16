@@ -58,4 +58,9 @@ describe('validateEnv', () => {
   it('throws when JWT_PUBLIC_KEY is a P-256 private key', () => {
     expect(() => validateEnv({ ...valid, JWT_PUBLIC_KEY: es256PrivateKey })).toThrow(/JWT_PUBLIC_KEY/);
   });
+
+  it('throws when JWT_PUBLIC_KEY is a valid public key followed by a trailing private key block', () => {
+    const bundle = `${es256PublicKey.trim()}\n${es256PrivateKey}`;
+    expect(() => validateEnv({ ...valid, JWT_PUBLIC_KEY: bundle })).toThrow(/JWT_PUBLIC_KEY/);
+  });
 });
