@@ -73,7 +73,10 @@ describe('GET /api/conversations/:conversationId/messages/search', () => {
     expect(res.body.items[0].content).toContain('tenant b');
   });
 
-  it.each([['?q='], ['?q=' + 'x'.repeat(257)], ['?q=hi&limit=0'], ['?q=hi&limit=101']])(
+  it.each([
+    ['?q='], ['?q=' + encodeURIComponent('   ')],
+    ['?q=' + 'x'.repeat(257)], ['?q=hi&limit=0'], ['?q=hi&limit=101'],
+  ])(
     'rejects %s with 400', async (query) => { await search(query).expect(400); },
   );
 

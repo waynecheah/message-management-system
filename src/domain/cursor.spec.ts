@@ -22,6 +22,8 @@ describe('cursor', () => {
     ['a non-numeric timestamp', Buffer.from('abc:x:desc').toString('base64url')],
     ['a malformed id', Buffer.from('123:not-a-uuid:desc').toString('base64url')],
     ['an unknown direction', Buffer.from('123:01996a1e-0000-7000-8000-000000000000:sideways').toString('base64url')],
+    ['garbage appended to an otherwise-valid cursor', `${encodeCursor(cursor)}!`],
+    ['a timestamp outside the valid Date range', Buffer.from('99999999999999999999:01996a1e-0000-7000-8000-000000000000:desc').toString('base64url')],
   ])('rejects %s', (_label, raw) => {
     expect(() => decodeCursor(raw, 'desc')).toThrow(InvalidCursorError);
   });

@@ -29,3 +29,10 @@ export class MissingIdentityError extends DomainError {
     super('no tenant identity in context');
   }
 }
+
+export class TenantMismatchError extends DomainError {
+  readonly code = 'TENANT_MISMATCH';
+  constructor() {
+    super('message tenant does not match the ambient identity');
+  }
+}

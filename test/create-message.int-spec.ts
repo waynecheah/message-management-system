@@ -59,6 +59,7 @@ describe('POST /api/messages', () => {
     ['blank content', { conversationId: 'c1', content: '   ' }],
     ['missing content', { conversationId: 'c1' }],
     ['missing conversationId', { content: 'hello' }],
+    ['whitespace-only conversationId', { conversationId: '   ', content: 'hello' }],
     ['oversized content', { conversationId: 'c1', content: 'x'.repeat(4001) }],
     ['oversized metadata', { conversationId: 'c1', content: 'hi', metadata: { k: 'x'.repeat(5000) } }],
   ])('rejects %s with 400', async (_label, body) => {

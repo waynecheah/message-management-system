@@ -9,6 +9,7 @@ export type Cursor = {
 };
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+const BASE64URL_PATTERN = /^[A-Za-z0-9_-]+$/;
 
 export function encodeCursor(cursor: Cursor): string {
   return Buffer.from(
@@ -17,14 +18,18 @@ export function encodeCursor(cursor: Cursor): string {
 }
 
 export function decodeCursor(raw: string, expected: SortDirection): Cursor {
+  if (!BASE64URL_PATTERN.test(raw)) throw new InvalidCursorError();
+
   const parts = Buffer.from(raw, 'base64url').toString('utf8').split(':');
   if (parts.length !== 3) throw new InvalidCursorError();
   const [ms, id, direction] = parts as [string, string, string];
 
   if (!/^\d+$/.test(ms)) throw new InvalidCursorError();
+  const timestamp = new Date(Number(ms));
+  if (Number.isNaN(timestamp.getTime())) throw new InvalidCursorError();
   if (!UUID_PATTERN.test(id)) throw new InvalidCursorError();
   if (direction !== 'asc' && direction !== 'desc') throw new InvalidCursorError();
   if (direction !== expected) throw new CursorDirectionError();
 
-  return { timestamp: new Date(Number(ms)), id, direction };
+  return { timestamp, id, direction };
 }

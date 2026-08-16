@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { plainToInstance, Type } from 'class-transformer';
-import { IsInt, IsNotEmpty, IsString, Matches, Max, Min, validateSync } from 'class-validator';
+import { IsInt, IsNotEmpty, IsString, Max, Min, validateSync } from 'class-validator';
+import { IsEs256PublicKey } from './es256-public-key.validator.ts';
 
 export class EnvConfig {
   @Type(() => Number) @IsInt() @Min(1) @Max(65535)
@@ -17,7 +18,7 @@ export class EnvConfig {
   @IsString() @IsNotEmpty() ELASTICSEARCH_NODE!: string;
   @IsString() @IsNotEmpty() ELASTICSEARCH_INDEX!: string;
 
-  @Matches(/-----BEGIN PUBLIC KEY-----/, { message: 'JWT_PUBLIC_KEY must be a PEM public key' })
+  @IsEs256PublicKey()
   JWT_PUBLIC_KEY!: string;
   @IsString() @IsNotEmpty() JWT_ISSUER!: string;
   @IsString() @IsNotEmpty() JWT_AUDIENCE!: string;

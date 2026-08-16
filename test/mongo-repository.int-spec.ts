@@ -1,6 +1,7 @@
 import { MongoClient, Binary } from 'mongodb';
 import type { INestApplication } from '@nestjs/common';
 import { Message } from '../src/domain/message.ts';
+import { MissingIdentityError, TenantMismatchError } from '../src/domain/errors.ts';
 import { MESSAGE_WRITER } from '../src/domain/ports/message-writer.port.ts';
 import type { MessageWriter } from '../src/domain/ports/message-writer.port.ts';
 import { AlsIdentityContext } from '../src/infrastructure/identity/als-identity-context.ts';
@@ -45,5 +46,23 @@ describe('MongoMessageRepository', () => {
     const indexes = await client.db(testEnv.MONGO_DB).collection('messages').indexes();
     const compound = indexes.find((i) => i.name === MESSAGES_INDEX_NAME);
     expect(compound?.key).toEqual({ tenantId: 1, conversationId: 1, timestamp: -1, _id: -1 });
+  });
+
+  it('rejects a write with no ambient identity', async () => {
+    const message = Message.create({
+      tenantId: 'tenant-a', conversationId: 'c2', senderId: 's1',
+      content: 'no context', metadata: undefined,
+    });
+    await expect(writer.save(message)).rejects.toThrow(MissingIdentityError);
+  });
+
+  it('rejects a write whose message tenant does not match the ambient identity', async () => {
+    const message = Message.create({
+      tenantId: 'tenant-b', conversationId: 'c3', senderId: 's1',
+      content: 'wrong tenant', metadata: undefined,
+    });
+    await expect(
+      als.run({ tenantId: 'tenant-a', senderId: 's1' }, () => writer.save(message)),
+    ).rejects.toThrow(TenantMismatchError);
   });
 });

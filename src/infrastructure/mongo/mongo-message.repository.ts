@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { Collection, Filter } from 'mongodb';
 import { encodeCursor } from '../../domain/cursor.ts';
+import { TenantMismatchError } from '../../domain/errors.ts';
 import type { Message } from '../../domain/message.ts';
 import type { MessageView } from '../../domain/message-view.ts';
 import type { Page } from '../../domain/page.ts';
@@ -27,6 +28,8 @@ export class MongoMessageRepository implements MessageWriter, MessageReader {
   ) {}
 
   async save(message: Message): Promise<void> {
+    const { tenantId } = this.identity.require(); // throws when absent — never a wildcard
+    if (message.tenantId !== tenantId) throw new TenantMismatchError();
     await this.collection.insertOne(toDocument(message));
   }
 

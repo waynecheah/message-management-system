@@ -1,4 +1,14 @@
+import { generateKeyPairSync } from 'node:crypto';
 import { validateEnv } from './env.config.ts';
+
+const { publicKey: es256PublicKey } = generateKeyPairSync('ec', {
+  namedCurve: 'prime256v1',
+  publicKeyEncoding: { type: 'spki', format: 'pem' },
+});
+const { publicKey: rsaPublicKey } = generateKeyPairSync('rsa', {
+  modulusLength: 2048,
+  publicKeyEncoding: { type: 'spki', format: 'pem' },
+});
 
 const valid = {
   MONGO_URL: 'mongodb://localhost:27017',
@@ -9,7 +19,7 @@ const valid = {
   KAFKA_GROUP_ID: 'search-indexer',
   ELASTICSEARCH_NODE: 'http://localhost:9200',
   ELASTICSEARCH_INDEX: 'messages',
-  JWT_PUBLIC_KEY: '-----BEGIN PUBLIC KEY-----\nMFkw\n-----END PUBLIC KEY-----',
+  JWT_PUBLIC_KEY: es256PublicKey,
   JWT_ISSUER: 'https://issuer.test',
   JWT_AUDIENCE: 'message-api',
 };
@@ -29,5 +39,14 @@ describe('validateEnv', () => {
 
   it('throws when JWT_PUBLIC_KEY is not a PEM public key', () => {
     expect(() => validateEnv({ ...valid, JWT_PUBLIC_KEY: 'not-a-key' })).toThrow(/JWT_PUBLIC_KEY/);
+  });
+
+  it('throws when JWT_PUBLIC_KEY is a well-formed PEM header but invalid ASN.1', () => {
+    const malformed = '-----BEGIN PUBLIC KEY-----\nMFkw\n-----END PUBLIC KEY-----';
+    expect(() => validateEnv({ ...valid, JWT_PUBLIC_KEY: malformed })).toThrow(/JWT_PUBLIC_KEY/);
+  });
+
+  it('throws when JWT_PUBLIC_KEY is a valid PEM key but not EC P-256', () => {
+    expect(() => validateEnv({ ...valid, JWT_PUBLIC_KEY: rsaPublicKey })).toThrow(/JWT_PUBLIC_KEY/);
   });
 });
