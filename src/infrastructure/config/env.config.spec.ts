@@ -9,6 +9,11 @@ const { publicKey: rsaPublicKey } = generateKeyPairSync('rsa', {
   modulusLength: 2048,
   publicKeyEncoding: { type: 'spki', format: 'pem' },
 });
+const { privateKey: es256PrivateKey } = generateKeyPairSync('ec', {
+  namedCurve: 'prime256v1',
+  publicKeyEncoding: { type: 'spki', format: 'pem' },
+  privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+});
 
 const valid = {
   MONGO_URL: 'mongodb://localhost:27017',
@@ -48,5 +53,9 @@ describe('validateEnv', () => {
 
   it('throws when JWT_PUBLIC_KEY is a valid PEM key but not EC P-256', () => {
     expect(() => validateEnv({ ...valid, JWT_PUBLIC_KEY: rsaPublicKey })).toThrow(/JWT_PUBLIC_KEY/);
+  });
+
+  it('throws when JWT_PUBLIC_KEY is a P-256 private key', () => {
+    expect(() => validateEnv({ ...valid, JWT_PUBLIC_KEY: es256PrivateKey })).toThrow(/JWT_PUBLIC_KEY/);
   });
 });

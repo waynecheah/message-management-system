@@ -24,6 +24,18 @@ describe('cursor', () => {
     ['an unknown direction', Buffer.from('123:01996a1e-0000-7000-8000-000000000000:sideways').toString('base64url')],
     ['garbage appended to an otherwise-valid cursor', `${encodeCursor(cursor)}!`],
     ['a timestamp outside the valid Date range', Buffer.from('99999999999999999999:01996a1e-0000-7000-8000-000000000000:desc').toString('base64url')],
+    ['a legal-alphabet alias with different unused pad bits', (() => {
+      const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+      const canonical = encodeCursor(cursor);
+      const bytes = Buffer.from(canonical, 'base64url');
+      for (const ch of alphabet) {
+        const candidate = `${canonical.slice(0, -1)}${ch}`;
+        if (candidate !== canonical && Buffer.from(candidate, 'base64url').equals(bytes)) {
+          return candidate;
+        }
+      }
+      throw new Error('fixture cursor leaves no unused pad bits to alias');
+    })()],
   ])('rejects %s', (_label, raw) => {
     expect(() => decodeCursor(raw, 'desc')).toThrow(InvalidCursorError);
   });

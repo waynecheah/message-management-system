@@ -20,7 +20,10 @@ export function encodeCursor(cursor: Cursor): string {
 export function decodeCursor(raw: string, expected: SortDirection): Cursor {
   if (!BASE64URL_PATTERN.test(raw)) throw new InvalidCursorError();
 
-  const parts = Buffer.from(raw, 'base64url').toString('utf8').split(':');
+  const buffer = Buffer.from(raw, 'base64url');
+  if (buffer.toString('base64url') !== raw) throw new InvalidCursorError(); // reject unused-pad-bit aliases
+
+  const parts = buffer.toString('utf8').split(':');
   if (parts.length !== 3) throw new InvalidCursorError();
   const [ms, id, direction] = parts as [string, string, string];
 
