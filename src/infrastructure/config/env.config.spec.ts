@@ -1,4 +1,4 @@
-import { generateKeyPairSync } from 'node:crypto';
+import { createPrivateKey, createPublicKey, generateKeyPairSync } from 'node:crypto';
 import { validateEnv } from './env.config.ts';
 
 const { publicKey: es256PublicKey } = generateKeyPairSync('ec', {
@@ -62,5 +62,13 @@ describe('validateEnv', () => {
   it('throws when JWT_PUBLIC_KEY is a valid public key followed by a trailing private key block', () => {
     const bundle = `${es256PublicKey.trim()}\n${es256PrivateKey}`;
     expect(() => validateEnv({ ...valid, JWT_PUBLIC_KEY: bundle })).toThrow(/JWT_PUBLIC_KEY/);
+  });
+
+  it('throws when JWT_PUBLIC_KEY hides trailing private-key DER inside a single PEM body', () => {
+    const publicDer = createPublicKey(es256PublicKey).export({ type: 'spki', format: 'der' });
+    const privateDer = createPrivateKey(es256PrivateKey).export({ type: 'pkcs8', format: 'der' });
+    const combinedBody = Buffer.concat([publicDer, privateDer]).toString('base64');
+    const hidden = `-----BEGIN PUBLIC KEY-----\n${combinedBody}\n-----END PUBLIC KEY-----`;
+    expect(() => validateEnv({ ...valid, JWT_PUBLIC_KEY: hidden })).toThrow(/JWT_PUBLIC_KEY/);
   });
 });

@@ -25,7 +25,16 @@ function isEs256PublicKey(value: unknown): boolean {
   if (!isSinglePublicKeyPem(value)) return false;
   try {
     const key = createPublicKey(value);
-    return key.asymmetricKeyType === 'ec' && key.asymmetricKeyDetails?.namedCurve === 'prime256v1';
+    if (key.asymmetricKeyType !== 'ec' || key.asymmetricKeyDetails?.namedCurve !== 'prime256v1') return false;
+
+    // createPublicKey() parses only the leading SPKI structure and ignores any
+    // bytes after it, so a PEM body can hide extra DER (e.g. a private key)
+    // past the public key. Require the decoded body to equal byte-for-byte
+    // the canonical SPKI DER export of the key it parsed to.
+    const lines = value.trim().split(/\r?\n/);
+    const decodedBody = Buffer.from(lines.slice(1, -1).join(''), 'base64');
+    const canonicalDer = key.export({ type: 'spki', format: 'der' });
+    return decodedBody.equals(canonicalDer);
   } catch {
     return false;
   }
