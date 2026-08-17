@@ -21,6 +21,9 @@ module.exports = {
       testMatch: ['<rootDir>/test/**/*.int-spec.ts'],
       transform: { '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.spec.json' }] },
       testEnvironment: '<rootDir>/no-temporal-environment.cjs',
+      // Per-project, deliberately: a unit-only run must never reach for Mongo
+      // or Elasticsearch (CLAUDE.md), so this cannot live at the root.
+      globalTeardown: '<rootDir>/global-teardown.cjs',
     },
   ],
 };
